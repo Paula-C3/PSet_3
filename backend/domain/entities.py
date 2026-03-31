@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-from domain.state import OpenState, IncidentState, state_for
-
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Optional
 
-from domain.enums import (
+from backend.domain.enums import (
     EventType,
     IncidentStatus,
     NotificationChannel,
@@ -16,6 +14,7 @@ from domain.enums import (
     Severity,
     TaskStatus,
 )
+from backend.domain.state import IncidentState, state_for
 
 
 def _new_id() -> str:
@@ -46,10 +45,10 @@ class Incident:
     title: str
     description: str
     severity: Severity
-    created_by: str                          # User.id
+    created_by: str
     id: str = field(default_factory=_new_id)
     status: IncidentStatus = IncidentStatus.OPEN
-    assigned_to: Optional[str] = None       # User.id
+    assigned_to: Optional[str] = None
     created_at: datetime = field(default_factory=_now)
     _state: IncidentState = field(init=False, repr=False, compare=False)
 
@@ -58,7 +57,6 @@ class Incident:
             raise ValueError("El título del incidente no puede estar vacío.")
         if not self.description.strip():
             raise ValueError("La descripción del incidente no puede estar vacía.")
-        from domain.state import state_for
         self._state = state_for(self.status)
 
     def assign(self, assignee_id: str) -> None:
@@ -72,14 +70,14 @@ class Incident:
 
     def close(self) -> None:
         self._state.close(self)
-        
+
 
 @dataclass
 class Task:
     incident_id: str
     title: str
     description: str
-    assigned_to: str                         # User.id
+    assigned_to: str
     id: str = field(default_factory=_new_id)
     status: TaskStatus = TaskStatus.OPEN
     created_at: datetime = field(default_factory=_now)
@@ -93,7 +91,7 @@ class Task:
 
 @dataclass
 class Notification:
-    recipient: str                           # User.id
+    recipient: str
     channel: NotificationChannel
     message: str
     event_type: EventType

@@ -2,15 +2,15 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
-from domain.entities import User, Incident, Task, Notification
-from domain.enums import IncidentStatus, TaskStatus, NotificationStatus
-from domain.repositories import (
+from backend.domain.entities import User, Incident, Task, Notification
+from backend.domain.enums import IncidentStatus, TaskStatus, NotificationStatus
+from backend.domain.repositories import (
     UserRepository,
     IncidentRepository,
     TaskRepository,
     NotificationRepository,
 )
-from infrastructure.models import (
+from backend.infrastructure.models import (
     UserModel,
     IncidentModel,
     TaskModel,

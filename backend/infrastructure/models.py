@@ -2,8 +2,8 @@ from sqlalchemy import Column, String, DateTime, ForeignKey, Enum, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
-from infrastructure.database import Base
-from domain.enums import (
+from backend.infrastructure.database import Base
+from backend.domain.enums import (
     Role,
     Severity,
     IncidentStatus,

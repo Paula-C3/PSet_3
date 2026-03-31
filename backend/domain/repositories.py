@@ -3,8 +3,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from domain.entities import Incident, Notification, Task, User
-from domain.enums import IncidentStatus, NotificationStatus, TaskStatus
+from backend.domain.entities import Incident, Notification, Task, User
+from backend.domain.enums import IncidentStatus, NotificationStatus, TaskStatus
 
 
 class UserRepository(ABC):
