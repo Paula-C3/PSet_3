@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from domain.entities import Notification
-from domain.enums import NotificationChannel
+from backend.domain.entities import Notification
+from backend.domain.enums import NotificationChannel
 
 
 class Command(ABC):

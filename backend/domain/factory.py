@@ -1,7 +1,7 @@
-from backend.domain.entities import Incident, Notification
-from backend.domain.enums import EventType, NotificationChannel, Severity
 from backend.domain.commands import Command, SendEmailCommand, SendInAppCommand
 from backend.domain.templates import EmailNotificationTemplate, InAppNotificationTemplate, NotificationTemplate
+from backend.domain.entities import User, Incident, Task, Notification # <--- AGREGA 'Notification' AQUÍ
+from backend.domain.enums import Role, Severity, IncidentStatus, NotificationChannel
 
 class IncidentFactory:
     """Crea incidentes validando todos los campos requeridos"""

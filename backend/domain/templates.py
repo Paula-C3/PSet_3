@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
-from domain.enums import EventType
-
+from backend.domain.enums import EventType
 
 class NotificationTemplate(ABC):
     """Template Method: define el esqueleto del mensaje de notificación"""

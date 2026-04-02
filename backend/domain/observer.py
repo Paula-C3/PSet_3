@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List
-from domain.enums import EventType
-
+from backend.domain.enums import EventType
 
 class Observer(ABC):
     @abstractmethod
