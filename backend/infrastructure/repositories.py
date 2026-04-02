@@ -1,6 +1,9 @@
 from __future__ import annotations
-
+from fastapi import Depends
 from sqlalchemy.orm import Session
+
+# Importa tu función que provee la sesión (usualmente get_db)
+from backend.infrastructure.database import get_db 
 
 from backend.domain.entities import User, Incident, Task, Notification
 from backend.domain.enums import IncidentStatus, TaskStatus, NotificationStatus
@@ -16,7 +19,6 @@ from backend.infrastructure.models import (
     TaskModel,
     NotificationModel,
 )
-
 
 def _to_domain_user(model: UserModel) -> User:
     return User(
