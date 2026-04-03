@@ -2,85 +2,142 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
 from sqlalchemy.orm import Session
 
-# Importamos la conexión a la base de datos y repositorios
+# Infraestructura
 from backend.infrastructure.database import get_db
 from backend.infrastructure.repositories import (
-    SQLAlchemyUserRepository, 
-    SQLAlchemyIncidentRepository
+    SQLAlchemyUserRepository,
+    SQLAlchemyIncidentRepository,
+    SQLAlchemyTaskRepository,
+    SQLAlchemyNotificationRepository
 )
+
+# Dominio
 from backend.domain.observer import EventBus
 
-# Importamos DTOs y Casos de Uso
+# DTOs
 from backend.application.dtos import (
-    IncidentDTO, IncidentCreateDTO, 
-    UserDTO, UserCreateDTO, TokenDTO
+    IncidentDTO,
+    IncidentCreateDTO,
+    UserDTO,
+    UserCreateDTO,
+    TokenDTO,
+    TaskCreateDTO
 )
-from backend.application.use_cases import IncidentUseCases, AuthUseCases
-from backend.api.dependencies import get_current_user, require_admin, require_supervisor
+
+# Casos de uso
+from backend.application.use_cases import (
+    IncidentUseCases,
+    AuthUseCases,
+    TaskUseCases,
+    NotificationUseCases
+)
+
+# Dependencias de seguridad
+from backend.api.dependencies import (
+    get_current_user,
+    require_admin,
+    require_supervisor
+)
 
 router = APIRouter()
 
-# --- PROVEEDORES DE SERVICIOS (Dependency Injection) ---
+
+# PROVEEDORES DE SERVICIOS
 
 def get_auth_service(db: Session = Depends(get_db)):
-    """Instancia el servicio de autenticacion con su repositorio."""
     repo = SQLAlchemyUserRepository(db)
     return AuthUseCases(repo)
 
+
 def get_incident_service(db: Session = Depends(get_db)):
-    """Instancia el servicio de incidentes con sus dependencias."""
     incident_repo = SQLAlchemyIncidentRepository(db)
     user_repo = SQLAlchemyUserRepository(db)
-    event_bus = EventBus() # O tu instancia global si existe
+    event_bus = EventBus()
     return IncidentUseCases(incident_repo, user_repo, event_bus)
 
-# --- RUTAS DE AUTENTICACION ---
+
+def get_task_service(db: Session = Depends(get_db)):
+    task_repo = SQLAlchemyTaskRepository(db)
+    event_bus = EventBus()
+    return TaskUseCases(task_repo, event_bus)
+
+
+def get_notification_service(db: Session = Depends(get_db)):
+    repo = SQLAlchemyNotificationRepository(db)
+    return NotificationUseCases(repo)
+
+
+# RUTAS DE ACCESO
 
 @router.post("/auth/register", response_model=UserDTO, status_code=status.HTTP_201_CREATED)
 def register(
-    user_data: UserCreateDTO, 
+    user_data: UserCreateDTO,
     service: AuthUseCases = Depends(get_auth_service)
 ):
     return service.register_user(user_data)
 
+
 @router.post("/auth/login", response_model=TokenDTO)
 def login(
-    user_data: UserCreateDTO, 
+    user_data: UserCreateDTO,
     service: AuthUseCases = Depends(get_auth_service)
 ):
-    token = service.login_user(user_data.username, user_data.password)
-    if not token:
+    try:
+        return service.login(user_data)
+    except Exception:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, 
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Credenciales incorrectas"
         )
-    return {"access_token": token, "token_type": "bearer"}
 
-# --- RUTAS DE INCIDENTES ---
+
+# RUTAS DE INCIDENTES
 
 @router.post("/incidents", response_model=IncidentDTO, status_code=status.HTTP_201_CREATED)
 def create_incident(
-    incident_data: IncidentCreateDTO, 
+    incident_data: IncidentCreateDTO,
     current_user: dict = Depends(get_current_user),
     service: IncidentUseCases = Depends(get_incident_service)
 ):
     return service.create_incident(incident_data, current_user["user_id"])
+
 
 @router.get("/incidents", response_model=List[IncidentDTO])
 def list_incidents(
     current_user: dict = Depends(get_current_user),
     service: IncidentUseCases = Depends(get_incident_service)
 ):
-    return service.get_all_incidents()
+    return service.get_all_incidents(current_user)
+
+
+@router.get("/incidents/{incident_id}", response_model=IncidentDTO)
+def get_incident_detail(
+    incident_id: str,
+    current_user: dict = Depends(get_current_user),
+    service: IncidentUseCases = Depends(get_incident_service)
+):
+    return service.get_incident_detail(incident_id)
+
 
 @router.patch("/incidents/{incident_id}/assign/{user_id}", response_model=IncidentDTO)
 def assign_incident(
-    incident_id: str, 
+    incident_id: str,
     user_id: str,
     current_user: dict = Depends(require_supervisor),
     service: IncidentUseCases = Depends(get_incident_service)
 ):
     return service.assign_incident(incident_id, user_id)
+
+
+@router.patch("/incidents/{incident_id}/status", response_model=IncidentDTO)
+def change_incident_status(
+    incident_id: str,
+    new_status: str,
+    current_user: dict = Depends(require_supervisor),
+    service: IncidentUseCases = Depends(get_incident_service)
+):
+    return service.change_status(incident_id, new_status)
+
 
 @router.delete("/incidents/{incident_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_incident(
@@ -90,3 +147,42 @@ def delete_incident(
 ):
     service.delete_incident(incident_id)
     return None
+
+
+# RUTAS DE TAREAS
+
+@router.post("/tasks", status_code=status.HTTP_201_CREATED)
+def create_task(
+    task_data: TaskCreateDTO,
+    current_user: dict = Depends(get_current_user),
+    service: TaskUseCases = Depends(get_task_service)
+):
+    return service.create_task(task_data)
+
+
+@router.get("/tasks")
+def get_tasks(
+    current_user: dict = Depends(get_current_user),
+    service: TaskUseCases = Depends(get_task_service)
+):
+    return service.get_tasks(current_user)
+
+
+@router.patch("/tasks/{task_id}/status")
+def change_task_status(
+    task_id: str,
+    new_status: str,
+    current_user: dict = Depends(get_current_user),
+    service: TaskUseCases = Depends(get_task_service)
+):
+    return service.change_task_status(task_id, new_status)
+
+
+# RUTAS DE NOTIFICACIONES
+
+@router.get("/notifications")
+def get_notifications(
+    current_user: dict = Depends(get_current_user),
+    service: NotificationUseCases = Depends(get_notification_service)
+):
+    return service.get_notifications(current_user)
