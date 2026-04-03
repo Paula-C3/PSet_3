@@ -457,10 +457,3 @@ PSet_3/
 4. Push: git push origin feature/nombre
 5. PR con descripcion y cambios
 
-## Licencia
-
-Proyecto educativo PSet_3 - 2026
-
-## Contacto
-
-Preguntas o sugerencias → Email al profesor
