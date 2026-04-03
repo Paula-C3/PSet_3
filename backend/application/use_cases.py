@@ -22,6 +22,14 @@ from backend.domain.observer import EventBus as DomainEventBus
 class AuthUseCases:
     def __init__(self, user_repo: UserRepository = Depends(SQLAlchemyUserRepository)):
         self.user_repo = user_repo
+    
+    def login(self, data: UserCreateDTO) -> TokenDTO:
+     user = self.user_repo.find_by_email(data.email)
+
+     if not user or not verify_password(data.password, user.hashed_password):
+      raise ValueError("Credenciales inválidas")
+     token = create_access_token({"sub": user.id, "role": user.role})
+     return TokenDTO(access_token=token)
 
 class IncidentUseCases:
     def __init__(
@@ -49,8 +57,11 @@ class IncidentUseCases:
         )
         return saved_incident
 
-    def get_all_incidents(self) -> List[Incident]:
-        return self.incident_repo.find_all()
+    def get_all_incidents(self, user: User) -> List[Incident]:
+     if user.role == Role.ADMIN or user.role == Role.SUPERVISOR:
+      return self.incident_repo.find_all()
+    
+     return self.incident_repo.find_by_user(user.id)
 
     def assign_incident(self, incident_id: str, assignee_id: str) -> Incident:
         incident = self.incident_repo.find_by_id(incident_id)
@@ -68,3 +79,77 @@ class IncidentUseCases:
 
     def delete_incident(self, incident_id: str):
         self.incident_repo.delete(incident_id)
+
+    def get_incident_detail(self, incident_id: str) -> Incident:
+      incident = self.incident_repo.find_by_id(incident_id)
+      if not incident:
+        raise ValueError("Incidente no encontrado")
+      return incident
+    
+    def change_status(self, incident_id: str, new_status) -> Incident:
+      incident = self.incident_repo.find_by_id(incident_id)
+      if not incident:
+        raise ValueError("Incidente no encontrado")
+      incident.change_status(new_status)
+      updated = self.incident_repo.save(incident)
+      self.event_bus.publish(
+        EventType.INCIDENT_STATUS_CHANGED,
+        {"id": updated.id, "status": str(updated.status)}
+      )
+      return updated
+    
+class TaskUseCases:
+
+    def __init__(
+        self,
+        task_repo: TaskRepository = Depends(SQLAlchemyTaskRepository),
+        event_bus: EventBus = Depends()
+    ):
+        self.task_repo = task_repo
+        self.event_bus = event_bus
+
+    def create_task(self, data: TaskCreateDTO) -> Task:
+     
+     task = Task(
+         id=None,
+         incident_id=data.incident_id,
+         title=data.title,
+         description=data.description,
+         assigned_to=data.assigned_to
+     )
+
+     saved = self.task_repo.save(task)
+     self.event_bus.publish(
+         EventType.TASK_CREATED,
+         {"id": saved.id, "incident_id": saved.incident_id}
+     )
+     return saved
+    
+    def get_tasks(self, user: User) -> List[Task]:
+     if user.role == Role.ADMIN or user.role == Role.SUPERVISOR:
+        return self.task_repo.find_all()
+
+     return self.task_repo.find_by_user(user.id)
+    
+    def change_status(self, task_id: str, new_status) -> Task:
+     task = self.task_repo.find_by_id(task_id)
+     if not task:
+        raise ValueError("Tarea no encontrada")
+     task.status = new_status
+     updated = self.task_repo.save(task)
+     self.event_bus.publish(
+         EventType.TASK_DONE,
+         {"id": updated.id}
+     )
+     return updated
+    
+class NotificationUseCases:
+
+    def __init__(self, notification_repo):
+        self.notification_repo = notification_repo
+
+    def get_notifications(self, user: User):
+     if user.role == Role.ADMIN:
+        return self.notification_repo.find_all()
+
+     return self.notification_repo.find_by_user(user.id)
