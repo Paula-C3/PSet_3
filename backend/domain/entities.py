@@ -29,7 +29,7 @@ def _now() -> datetime:
 class User:
     name: str
     email: str
-    hashed_password: str
+    password: str
     role: Role
     id: str = field(default_factory=_new_id)
 

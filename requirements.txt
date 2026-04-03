@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+sqlalchemy
+alembic
+pyjwt
+bcrypt
+psycopg2-binary
+pytest
