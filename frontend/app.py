@@ -33,16 +33,16 @@ def api_request(method, endpoint, **kwargs):
         return None
 
 def login_page():
-    st.title("🔐 OpsCenter - Login")
+    st.title("OpsCenter - Login")
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
-        st.markdown("### Sistema de Gestión de Incidentes")
+        st.markdown("### Sistema de Gestion de Incidentes")
         
         with st.form("login_form"):
             username = st.text_input("Usuario (email)")
-            password = st.text_input("Contraseña", type="password")
-            submitted = st.form_submit_button("Iniciar Sesión", use_container_width=True)
+            password = st.text_input("Contrasena", type="password")
+            submitted = st.form_submit_button("Iniciar Sesion", use_container_width=True)
             
             if submitted:
                 result = api_request("POST", "/auth/login", 
@@ -50,19 +50,19 @@ def login_page():
                 if result:
                     st.session_state.token = result.get("access_token")
                     st.session_state.user = {"email": username}
-                    st.success("✅ Login exitoso")
+                    st.success("Login exitoso")
                     st.rerun()
                 else:
-                    st.error("❌ Credenciales inválidas")
+                    st.error("Credenciales invalidas")
 
 def incidents_view():
-    st.header("📋 Incidentes")
+    st.header("Incidentes")
     
     tabs = st.tabs(["Lista", "Crear", "Mis Incidentes"])
     
     with tabs[0]:
         st.subheader("Todos los Incidentes")
-        if st.button("🔄 Actualizar", key="refresh_incidents"):
+        if st.button("Actualizar", key="refresh_incidents"):
             st.rerun()
         
         incidents = api_request("GET", "/incidents")
@@ -75,13 +75,13 @@ def incidents_view():
                         st.caption(f"{inc['description'][:100]}...")
                     with col2:
                         severity_color = {
-                            "LOW": "🟢", "MEDIUM": "🟡", "HIGH": "🔴", "CRITICAL": "🔴🔴"
+                            "LOW": "Bajo", "MEDIUM": "Medio", "HIGH": "Alto", "CRITICAL": "Critico"
                         }
                         st.metric("Severidad", severity_color.get(inc['severity'], inc['severity']))
                     with col3:
                         status_color = {
-                            "OPEN": "🟦", "ASSIGNED": "🟪", 
-                            "IN_PROGRESS": "🟨", "RESOLVED": "🟩", "CLOSED": "⬜"
+                            "OPEN": "Abierto", "ASSIGNED": "Asignado", 
+                            "IN_PROGRESS": "En Progreso", "RESOLVED": "Resuelto", "CLOSED": "Cerrado"
                         }
                         st.metric("Estado", status_color.get(inc['status'], inc['status']))
                     
@@ -94,8 +94,8 @@ def incidents_view():
     with tabs[1]:
         st.subheader("Crear Nuevo Incidente")
         with st.form("create_incident_form"):
-            title = st.text_input("Título", max_chars=100)
-            description = st.text_area("Descripción", height=120)
+            title = st.text_input("Titulo", max_chars=100)
+            description = st.text_area("Descripcion", height=120)
             severity = st.selectbox("Severidad", ["LOW", "MEDIUM", "HIGH", "CRITICAL"])
             
             if st.form_submit_button("Crear Incidente", use_container_width=True):
@@ -106,17 +106,17 @@ def incidents_view():
                                        "severity": severity
                                    })
                 if result:
-                    st.success(f"✅ Incidente creado: {result['id']}")
+                    st.success(f"Incidente creado: {result['id']}")
                     st.rerun()
 
 def tasks_view():
-    st.header("✅ Tareas")
+    st.header("Tareas")
     
     tabs = st.tabs(["Mi Panel", "Crear Tarea"])
     
     with tabs[0]:
         st.subheader("Mis Tareas")
-        if st.button("🔄 Actualizar", key="refresh_tasks"):
+        if st.button("Actualizar", key="refresh_tasks"):
             st.rerun()
         
         tasks = api_request("GET", "/tasks")
@@ -128,7 +128,7 @@ def tasks_view():
                         st.markdown(f"**{task['title']}**")
                         st.caption(f"Incidente: {task.get('incident_id', 'N/A')}")
                     with col2:
-                        status_icon = {"OPEN": "🔴", "IN_PROGRESS": "🟡", "DONE": "🟢"}
+                        status_icon = {"OPEN": "Abierto", "IN_PROGRESS": "En Progreso", "DONE": "Completado"}
                         st.metric("Estado", status_icon.get(task['status'], task['status']))
                     with col3:
                         new_status = st.selectbox(
@@ -140,7 +140,7 @@ def tasks_view():
                             result = api_request("PATCH", f"/tasks/{task['id']}/status",
                                                json={"new_status": new_status})
                             if result:
-                                st.success("✅ Tarea actualizada")
+                                st.success("Tarea actualizada")
                                 st.rerun()
         else:
             st.info("No hay tareas")
@@ -149,8 +149,8 @@ def tasks_view():
         st.subheader("Crear Nueva Tarea")
         with st.form("create_task_form"):
             incident_id = st.text_input("ID del Incidente")
-            title = st.text_input("Título", max_chars=100)
-            description = st.text_area("Descripción", height=100)
+            title = st.text_input("Titulo", max_chars=100)
+            description = st.text_area("Descripcion", height=100)
             assigned_to = st.text_input("Asignar a (User ID)")
             
             if st.form_submit_button("Crear Tarea", use_container_width=True):
@@ -162,25 +162,25 @@ def tasks_view():
                                        "assigned_to": assigned_to
                                    })
                 if result:
-                    st.success("✅ Tarea creada")
+                    st.success("Tarea creada")
                     st.rerun()
 
 def notifications_view():
-    st.header("🔔 Notificaciones")
+    st.header("Notificaciones")
     
-    if st.button("🔄 Actualizar", key="refresh_notifications"):
+    if st.button("Actualizar", key="refresh_notifications"):
         st.rerun()
     
     notifications = api_request("GET", "/notifications")
     if notifications:
         for notif in notifications:
             status_color = {
-                "PENDING": "🟡",
-                "SENT": "🟢",
-                "FAILED": "🔴"
+                "PENDING": "Pendiente",
+                "SENT": "Enviado",
+                "FAILED": "Fallido"
             }
             with st.container(border=True):
-                st.markdown(f"**{notif['event_type']}** {status_color.get(notif['status'], '⚪')}")
+                st.markdown(f"**{notif['event_type']}** {status_color.get(notif['status'], '')}")
                 st.write(notif['message'])
                 st.caption(f"Canal: {notif['channel']} | {notif['created_at']}")
     else:
@@ -192,31 +192,31 @@ def main():
     else:
         # Sidebar
         with st.sidebar:
-            st.title("🏢 OpsCenter")
+            st.title("OpsCenter")
             st.divider()
             
             if st.session_state.user:
-                st.write(f"👤 {st.session_state.user.get('email', 'Usuario')}")
+                st.write(f"Usuario: {st.session_state.user.get('email', 'Usuario')}")
             
             st.divider()
             page = st.radio(
-                "Navegación",
-                ["📋 Incidentes", "✅ Tareas", "🔔 Notificaciones"],
+                "Navegacion",
+                ["Incidentes", "Tareas", "Notificaciones"],
                 label_visibility="collapsed"
             )
             
             st.divider()
-            if st.button("🚪 Cerrar Sesión", use_container_width=True):
+            if st.button("Cerrar Sesion", use_container_width=True):
                 st.session_state.token = None
                 st.session_state.user = None
                 st.rerun()
         
         # Main content
-        if page == "📋 Incidentes":
+        if page == "Incidentes":
             incidents_view()
-        elif page == "✅ Tareas":
+        elif page == "Tareas":
             tasks_view()
-        elif page == "🔔 Notificaciones":
+        elif page == "Notificaciones":
             notifications_view()
 
 if __name__ == "__main__":

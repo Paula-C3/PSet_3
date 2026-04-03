@@ -1,16 +1,14 @@
-# OpsCenter - Sistema de Gestión de Incidentes Operativos
+# OpsCenter - Sistema de Gestion de Incidentes Operativos
 
-## 📋 Descripción
+## Descripcion
 
-**OpsCenter** es una plataforma interna para gestionar incidentes operativos, tareas y notificaciones en una fintech. Resuelve el problema de mala trazabilidad, asignación de responsables y visibilidad de estado de incidentes que antes se manejaba con correo, hojas de cálculo y mensajería informal.
+OpsCenter es una plataforma interna para gestionar incidentes operativos, tareas y notificaciones en una fintech. Resuelve el problema de mala trazabilidad, asignacion de responsables y visibilidad de estado de incidentes que antes se manejaba con correo, hojas de calculo y mensajeria informal.
 
 ### Problema que resuelve
-- ❌ Antes: Correo, hojas de cálculo, mensajería informal → baja trazabilidad
-- ✅ Ahora: Plataforma integrada → trazabilidad completa, asignación clara, estado visible
+- Antes: Correo, hojas de calculo, mensajeria informal → baja trazabilidad
+- Ahora: Plataforma integrada → trazabilidad completa, asignacion clara, estado visible
 
----
-
-## 🏗️ Arquitectura Hexagonal
+## Arquitectura Hexagonal
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -20,7 +18,7 @@
                               ↓
 ┌──────────────────────────────────────────────────────────────┐
 │                    Application Layer                         │
-│  (UseCases, DTOs, Coordinación de flujos)                   │
+│  (UseCases, DTOs, Coordinacion de flujos)                   │
 └──────────────────────────────────────────────────────────────┘
                               ↓
 ┌──────────────────────────────────────────────────────────────┐
@@ -30,109 +28,108 @@
                               ↓
 ┌──────────────────────────────────────────────────────────────┐
 │                  Infrastructure Layer                        │
-│  (ORM, Repositorios, BD, Autenticación, EventBus)           │
+│  (ORM, Repositorios, BD, Autenticacion, EventBus)           │
 └──────────────────────────────────────────────────────────────┘
 ```
 
 ### Capas
 
-#### **Domain** (`backend/domain/`)
-- **Entidades**: User, Incident, Task, Notification
-- **Enums**: Role, Severity, IncidentStatus, TaskStatus, NotificationStatus
-- **Patrones**:
-  - **State**: Máquina de estados para ciclo de vida de incidentes
-  - **Observer**: EventBus y observadores para eventos del sistema
-  - **Command**: Abstracción de comandos para envío de notificaciones
-  - **Template Method**: Base para construir mensajes según canal
-  - **Factory**: IncidentFactory y NotificationFactory para creación consistente
-- **Repositorios (interfaces)**: Contrato entre capas
+#### Domain (backend/domain/)
+- Entidades: User, Incident, Task, Notification
+- Enums: Role, Severity, IncidentStatus, TaskStatus, NotificationStatus
+- Patrones:
+  - State: Maquina de estados para ciclo de vida de incidentes
+  - Observer: EventBus y observadores para eventos del sistema
+  - Command: Abstraccion de comandos para envio de notificaciones
+  - Template Method: Base para construir mensajes segun canal
+  - Factory: IncidentFactory y NotificationFactory para creacion consistente
+  - Abstract Factory: NotificationFactory para extensibilidad
+- Repositorios (interfaces): Contrato entre capas
 
-#### **Application** (`backend/application/`)
-- **UseCases**: AuthUseCases, IncidentUseCases, TaskUseCases, NotificationUseCases
-- **DTOs**: Contrato de entrada/salida (UserDTO, IncidentDTO, TaskDTO, etc.)
-- **Lógica de orquestación**: Coordina dominio e infraestructura
+#### Application (backend/application/)
+- UseCases: AuthUseCases, IncidentUseCases, TaskUseCases, NotificationUseCases
+- DTOs: Contrato de entrada/salida (UserDTO, IncidentDTO, TaskDTO, etc.)
+- Logica de orquestacion: Coordina dominio e infraestructura
 
-#### **Infrastructure** (`backend/infrastructure/`)
-- **Repositorios (implementación)**: SQLAlchemy + ORM
-- **Modelos ORM**: UserModel, IncidentModel, TaskModel, NotificationModel
-- **Base de datos**: Conexión y migraciones con Alembic
-- **Autenticación**: hash de passwords con bcrypt, JWT
-- **EventBus concreto**: Implementación del patrón Observer
-- **Persistencia**: ORM desacoplado del dominio
+#### Infrastructure (backend/infrastructure/)
+- Repositorios (implementacion): SQLAlchemy + ORM
+- Modelos ORM: UserModel, IncidentModel, TaskModel, NotificationModel
+- Base de datos: Conexion y migraciones con Alembic
+- Autenticacion: hash de passwords con bcrypt, JWT
+- EventBus concreto: Implementacion del patron Observer
+- Persistencia: ORM desacoplado del dominio
 
-#### **API** (`backend/api/`)
-- **Endpoints**: CRUD para incidentes, tareas, notificaciones
-- **Seguridad**: Dependencias y guards (roles/permisos)
-- **Rutas**: Organizadas por recurso
+#### API (backend/api/)
+- Endpoints: CRUD para incidentes, tareas, notificaciones
+- Seguridad: Dependencias y guards (roles/permisos)
+- Rutas: Organizadas por recurso
 
-#### **Frontend** (`frontend/`)
-- **Streamlit**: app.py con vistas dinámicas
-- **Login**: Autenticación y sesión
-- **Paneles**: Incidentes, tareas, notificaciones
-- **Autorización**: Respeta roles desde frontend (validación real en backend)
+#### Frontend (frontend/)
+- Streamlit: app.py con vistas dinámicas
+- Login: Autenticacion y sesion
+- Paneles: Incidentes, tareas, notificaciones
+- Autorizacion: Respeta roles desde frontend (validacion real en backend)
 
----
-
-## 📚 Patrones de Diseño Implementados
+## Patrones de Diseño Implementados
 
 ### Patrones de Comportamiento
 
-#### **1. Observer** (`backend/domain/observer.py`)
-**Uso**: Publicar eventos del sistema y reaccionar automáticamente
-- **Publisher**: EventBus
-- **Observers**:
+#### 1. Observer (backend/domain/observer.py)
+Uso: Publicar eventos del sistema y reaccionar automaticamente
+- Publisher: EventBus
+- Observers:
   - NotificationObserver: genera notificaciones al crear/cambiar incidentes
   - LogObserver: registra eventos en logs
-- **Eventos**: INCIDENT_CREATED, INCIDENT_ASSIGNED, TASK_DONE, etc.
+- Eventos: INCIDENT_CREATED, INCIDENT_ASSIGNED, TASK_DONE, etc.
 
-**Flujo**:
+Flujo:
 ```python
 # En use_cases.py
 self.event_bus.publish(EventType.INCIDENT_CREATED, {"id": incident.id})
 
-# El observer reacciona automáticamente creando notificaciones
+# El observer reacciona automaticamente creando notificaciones
 ```
 
-#### **2. Command** (`backend/domain/commands.py`)
-**Uso**: Encapsular la ejecución de notificaciones
-- **Interfaz**: Command con método execute()
-- **Implementaciones**:
-  - SendEmailCommand: envío por email
-  - SendInAppCommand: notificación en aplicación
-- **Factory**: NotificationFactory decide cuál comando usar
+#### 2. Command (backend/domain/commands.py)
+Uso: Encapsular la ejecucion de notificaciones
+- Interfaz: Command con metodo execute()
+- Implementaciones:
+  - SendEmailCommand: envio por email
+  - SendInAppCommand: notificacion en aplicacion
+- Factory: NotificationFactory decide cual comando usar
 
-**Flujo**:
+Flujo:
 ```python
 command = NotificationFactory.create_command(notification)
 command.execute()
 ```
 
-#### **3. State** (`backend/domain/state.py`)
-**Uso**: Controlar el ciclo de vida de incidentes
-- **Estados**:
-  - OpenState: recién creado
+#### 3. State (backend/domain/state.py)
+Uso: Controlar el ciclo de vida de incidentes
+- Estados:
+  - OpenState: recien creado
   - AssignedState: asignado a usuario
-  - InProgressState: en resolución
+  - InProgressState: en resolucion
   - ResolvedState: resuelto
   - ClosedState: cerrado
-- **Transiciones**: Validadas por cada estado
+- Transiciones: Validadas por cada estado
 
-**Flujo**:
+Flujo:
 ```python
-incident._state.assign(incident, assignee_id)  # Cambia estado automáticamente
+incident._state.assign(incident, assignee_id)  # Cambia estado automaticamente
 incident._state.start_progress(incident)
 incident._state.resolve(incident)
 ```
 
-#### **4. Template Method** (`backend/domain/templates.py`)
-**Uso**: Construir mensajes de notificación según canal
-- **Clase abstracta**: NotificationTemplate
-- **Implementaciones**:
+#### 4. Template Method (backend/domain/templates.py)
+Uso: Construir mensajes de notificacion segun canal
+- Clase abstracta: NotificationTemplate
+- Implementaciones:
   - EmailNotificationTemplate: formato HTML para email
   - InAppNotificationTemplate: formato JSON compacto
-- **Método template**: build_message() define estructura
+- Metodo template: build_message() define estructura
 
-**Flujo**:
+Flujo:
 ```python
 template = NotificationFactory.create_template(NotificationChannel.EMAIL)
 message = template.build_message(notification)
@@ -140,21 +137,21 @@ message = template.build_message(notification)
 
 ### Patrones Creacionales
 
-#### **5. Factory** (`backend/domain/factory.py`)
-**Uso**: Crear entidades y comandos validando reglas
-- **IncidentFactory**: crear incidentes con validaciones
-  - Valida: título no vacío, descripción no vacía, severidad válida
+#### 5. Factory (backend/domain/factory.py)
+Uso: Crear entidades y comandos validando reglas
+- IncidentFactory: crear incidentes con validaciones
+  - Valida: titulo no vacio, descripcion no vacia, severidad valida
   - Retorna: Incident(status=OPEN)
-- **NotificationFactory**: crear comandos y templates según canal
+- NotificationFactory: crear comandos y templates segun canal
 
-#### **6. Abstract Factory** (justificación adicional)
-**Implementado en**: NotificationFactory
-**Razón**: En sistemas reales, cada canal (Email, SMS, Push) requiere:
+#### 6. Abstract Factory (justificacion adicional)
+Implementado en: NotificationFactory
+Razon: En sistemas reales, cada canal (Email, SMS, Push) requiere:
 - Su propio Command
 - Su propio Template
-- Su propia lógica de envío
+- Su propia logica de envio
 
-**Beneficio**: Agregar nuevos canales sin modificar código existente
+Beneficio: Agregar nuevos canales sin modificar codigo existente
 ```python
 @staticmethod
 def create_command(notification: Notification) -> Command:
@@ -165,9 +162,7 @@ def create_command(notification: Notification) -> Command:
     # ...
 ```
 
----
-
-## 🚀 Cómo Correrlo
+## Como Correrlo
 
 ### Con Docker Compose (Recomendado)
 
@@ -185,10 +180,10 @@ docker compose up --build
 # Docs: http://localhost:8000/docs
 ```
 
-**Servicios**:
-- `db`: PostgreSQL en puerto 5432
-- `api`: FastAPI en puerto 8000
-- `ui`: Streamlit en puerto 8501
+Servicios:
+- db: PostgreSQL en puerto 5432
+- api: FastAPI en puerto 8000
+- ui: Streamlit en puerto 8501
 
 ### Sin Docker (Local)
 
@@ -211,53 +206,47 @@ cd frontend
 streamlit run app.py
 ```
 
----
-
-## 📖 Cómo Usarlo
+## Como Usarlo
 
 ### 1. Login
 - Ir a http://localhost:8501
-- Ingresar credenciales (usuario de prueba: `admin@test.com` / `password`)
+- Ingresar credenciales (usuario de prueba: admin@test.com / password)
 
 ### 2. Crear Incidente (Operator, Supervisor, Admin)
-- Ir a "📋 Incidentes" → "Crear"
-- Llenar: Título, Descripción, Severidad
+- Ir a "Incidentes" → "Crear"
+- Llenar: Titulo, Descripcion, Severidad
 - Click "Crear Incidente"
-- Evento publicado → Observer crea notificación → Command ejecuta envío
+- Evento publicado → Observer crea notificacion → Command ejecuta envio
 
 ### 3. Asignar Incidente (Supervisor, Admin)
-- Ir a "📋 Incidentes" → "Lista"
+- Ir a "Incidentes" → "Lista"
 - Click en incidente
 - Ingresar ID de usuario
 - Click "Asignar"
 
 ### 4. Cambiar Estado (Supervisor, Admin)
-- Ir a "📋 Incidentes"
+- Ir a "Incidentes"
 - Selectbox de estado
-- State automáticamente valida transición
+- State automaticamente valida transicion
 
 ### 5. Crear / Actualizar Tarea
-- Ir a "✅ Tareas"
+- Ir a "Tareas"
 - Crear: llenar formulario
 - Actualizar: selectbox de estado → Click "Actualizar"
 
 ### 6. Ver Notificaciones
-- Ir a "🔔 Notificaciones"
+- Ir a "Notificaciones"
 - Se actualizan en tiempo real cuando hay eventos
 
----
-
-## 🔐 Roles y Permisos
+## Roles y Permisos
 
 | Rol | Can Create Incident | Can Assign | Can Change State | Can See All | Can Manage Users |
 |-----|-------------------|-----------|-----------------|------------|------------------|
-| OPERATOR | ✅ | ❌ | ❌ | ❌ (solo sus) | ❌ |
-| SUPERVISOR | ✅ | ✅ | ✅ | ✅ (equipo) | ❌ |
-| ADMIN | ✅ | ✅ | ✅ | ✅ (todos) | ✅ |
+| OPERATOR | Si | No | No | No (solo sus) | No |
+| SUPERVISOR | Si | Si | Si | Si (equipo) | No |
+| ADMIN | Si | Si | Si | Si (todos) | Si |
 
----
-
-## 📊 Base de Datos
+## Base de Datos
 
 ### Tablas
 ```sql
@@ -297,9 +286,7 @@ notifications
   - created_at
 ```
 
----
-
-## 🧪 Tests
+## Tests
 
 Todos pasando (31/31):
 
@@ -318,19 +305,17 @@ pytest --cov=backend --cov-report=html
 ```
 
 ### Cobertura
-- ✅ Comandos de notificación
-- ✅ Factory de incidentes
-- ✅ Observer y EventBus
-- ✅ Templates de notificación
-- ✅ Repositorios SQLAlchemy
-- ✅ Rutas y autenticación
-- ✅ UseCases
+- Comandos de notificacion
+- Factory de incidentes
+- Observer y EventBus
+- Templates de notificacion
+- Repositorios SQLAlchemy
+- Rutas y autenticacion
+- UseCases
 
----
+## Endpoints Disponibles
 
-## 📡 Endpoints Disponibles
-
-### Autenticación
+### Autenticacion
 ```
 POST   /auth/register     → Register new user
 POST   /auth/login        → Login & get token
@@ -359,24 +344,20 @@ PATCH  /tasks/{id}/status → Change status
 GET    /notifications     → List (filtered by user)
 ```
 
----
+## Demo - Escenarios Demostrables
 
-## 🎨 Demo - Escenarios Demostables
+1. Login exitoso → Frontend autentica con API
+2. Crear incidente → Desde frontend
+3. Incidente persiste → En PostgreSQL via ORM
+4. Publicar evento → EventBus.publish()
+5. Observer reacciona → NotificationObserver captura
+6. Template construye mensaje → EmailNotificationTemplate.build_message()
+7. Command ejecuta envio → SendEmailCommand.execute()
+8. Estado cambia → State maquina de estados
+9. Factory crea → IncidentFactory, NotificationFactory
+10. Filtrado por rol → Operator ve solo sus incidentes
 
-1. ✅ **Login exitoso** → Frontend autentica con API
-2. ✅ **Crear incidente** → Desde frontend
-3. ✅ **Incidente persiste** → En PostgreSQL vía ORM
-4. ✅ **Publicar evento** → EventBus.publish()
-5. ✅ **Observer reacciona** → NotificationObserver captura
-6. ✅ **Template construye mensaje** → EmailNotificationTemplate.build_message()
-7. ✅ **Command ejecuta envío** → SendEmailCommand.execute()
-8. ✅ **Estado cambia** → State máquina de estados
-9. ✅ **Factory crea** → IncidentFactory, NotificationFactory
-10. ✅ **Filtrado por rol** → Operator ve solo sus incidentes
-
----
-
-## 📂 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 PSet_3/
@@ -401,7 +382,7 @@ PSet_3/
 │   │   ├── factory.py        # IncidentFactory, NotificationFactory
 │   │   └── __init__.py
 │   ├── infrastructure/
-│   │   ├── database.py       # Conexión SQLAlchemy
+│   │   ├── database.py       # Conexion SQLAlchemy
 │   │   ├── models.py         # ORM models
 │   │   ├── repositories.py   # Implementaciones repositorio
 │   │   ├── auth.py           # Hash, JWT
@@ -411,7 +392,7 @@ PSet_3/
 ├── frontend/
 │   ├── app.py                # Streamlit principal
 │   ├── .streamlit/
-│   │   └── config.toml       # Configuración Streamlit
+│   │   └── config.toml       # Configuracion Streamlit
 │   └── requirements.txt
 ├── test/
 │   └── unit/                 # Unit tests
@@ -422,74 +403,64 @@ PSet_3/
 │   ├── use_cases.puml        # Diagrama UML
 │   ├── class_diagram.puml    # Diagrama UML
 │   └── sequence_diagram.puml # Diagrama UML
-├── docker-compose.yml        # Orquestación de contenedores
+├── docker-compose.yml        # Orquestacion de contenedores
 ├── Dockerfile                # Build API
 ├── requirements.txt          # Dependencias Python
-├── pytest.ini                # Configuración pytest
-├── alembic.ini               # Configuración migraciones
+├── pytest.ini                # Configuracion pytest
+├── alembic.ini               # Configuracion migraciones
 └── README.md                 # Este archivo
 ```
 
----
-
-## 🔧 Tecnologías
+## Tecnologias
 
 ### Backend
-- **Framework**: FastAPI
-- **ORM**: SQLAlchemy
-- **BD**: PostgreSQL (Docker) / SQLite (Local)
-- **Autenticación**: JWT + bcrypt
-- **Testing**: pytest
-- **Migraciones**: Alembic
+- Framework: FastAPI
+- ORM: SQLAlchemy
+- BD: PostgreSQL (Docker) / SQLite (Local)
+- Autenticacion: JWT + bcrypt
+- Testing: pytest
+- Migraciones: Alembic
 
 ### Frontend
-- **Framework**: Streamlit
-- **HTTP**: requests
+- Framework: Streamlit
+- HTTP: requests
 
 ### DevOps
-- **Contenedores**: Docker
-- **Orquestación**: Docker Compose
+- Contenedores: Docker
+- Orquestacion: Docker Compose
 
----
+## Lecciones de Diseño
 
-## 🎓 Lecciones de Diseño
+### Por que Arquitectura Hexagonal?
 
-### ¿Por qué Arquitectura Hexagonal?
+1. Testabilidad: Cada capa puede testearse independientemente
+2. Flexible: Cambiar BD, autenticacion sin afectar logica
+3. Mantenible: Responsabilidades claras
+4. Escalable: Facil agregar nuevas capas
 
-1. **Testabilidad**: Cada capa puede testearse independientemente
-2. **Flexible**: Cambiar BD, autenticación sin afectar lógica
-3. **Mantenible**: Responsabilidades claras
-4. **Escalable**: Fácil agregar nuevas capas
+### Por que Patrones?
 
-### ¿Por qué Patrones?
-
-| Patrón | Razón |
+| Patron | Razon |
 |--------|-------|
-| **State** | Validar transiciones de estado seguras |
-| **Observer** | Desacoplar eventos de sus consecuencias |
-| **Command** | Encapsular lógica de envío de notificaciones |
-| **Template Method** | Reutilizar estructura de mensajes por canal |
-| **Factory** | Validar y crear entidades consistentemente |
-| **Abstract Factory** | Extensibilidad para nuevos canales sin modificar código |
+| State | Validar transiciones de estado seguras |
+| Observer | Desacoplar eventos de sus consecuencias |
+| Command | Encapsular logica de envio de notificaciones |
+| Template Method | Reutilizar estructura de mensajes por canal |
+| Factory | Validar y crear entidades consistentemente |
+| Abstract Factory | Extensibilidad para nuevos canales sin modificar codigo |
 
----
+## Como Contribuir
 
-## 🚦 Cómo Contribuir
-
-1. Crear branch: `git checkout -b feature/nombre`
+1. Crear branch: git checkout -b feature/nombre
 2. Hacer cambios
-3. Commit: `git commit -m "feat: descripción"`
-4. Push: `git push origin feature/nombre`
-5. PR con descripción y cambios
+3. Commit: git commit -m "feat: descripcion"
+4. Push: git push origin feature/nombre
+5. PR con descripcion y cambios
 
----
-
-## 📝 Licencia
+## Licencia
 
 Proyecto educativo PSet_3 - 2026
 
----
-
-## 📧 Contacto
+## Contacto
 
 Preguntas o sugerencias → Email al profesor
