@@ -23,8 +23,18 @@ class UserModel(Base):
     hashed_password = Column(String, nullable=False)
     role = Column(Enum(Role), nullable=False)
 
-    created_incidents = relationship("IncidentModel", foreign_keys="[IncidentModel.created_by]")
-    assigned_incidents = relationship("IncidentModel", foreign_keys="[IncidentModel.assigned_to]")
+    created_incidents = relationship(
+        "IncidentModel",
+        foreign_keys="[IncidentModel.created_by]",
+        back_populates="creator",
+        overlaps="creator,assigned_incidents"
+    )
+    assigned_incidents = relationship(
+        "IncidentModel",
+        foreign_keys="[IncidentModel.assigned_to]",
+        back_populates="assignee",
+        overlaps="assignee,created_incidents"
+    )
     tasks = relationship("TaskModel", back_populates="assignee")
     notifications = relationship("NotificationModel", back_populates="recipient_user")
 
@@ -43,8 +53,18 @@ class IncidentModel(Base):
 
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    creator = relationship("UserModel", foreign_keys=[created_by])
-    assignee = relationship("UserModel", foreign_keys=[assigned_to])
+    creator = relationship(
+        "UserModel",
+        foreign_keys=[created_by],
+        back_populates="created_incidents",
+        overlaps="created_incidents"
+    )
+    assignee = relationship(
+        "UserModel",
+        foreign_keys=[assigned_to],
+        back_populates="assigned_incidents",
+        overlaps="assigned_incidents"
+    )
     tasks = relationship("TaskModel", back_populates="incident")
 
 
