@@ -1,9 +1,9 @@
-import streamlit as st
-from frontend.api_client import APIClient
-from frontend.views.login import show_login_page
-from frontend.views.incidents import show_incidents_page, show_incident_detail
-from frontend.views.tasks import show_tasks_page
-from frontend.views.notifications import show_notifications_page
+import streamlit as st          #type:ignore
+from api_client import APIClient
+from views.login import show_login_page
+from views.incidents import show_incidents_page, show_incident_detail
+from views.tasks import show_tasks_page
+from views.notifications import show_notifications_page
 
 # Configuración
 st.set_page_config(page_title="OpsCenter", layout="wide", initial_sidebar_state="expanded")

@@ -1,5 +1,5 @@
-import streamlit as st
-from frontend.api_client import APIClient
+import streamlit as st      #type:ignore
+from api_client import APIClient
 from typing import Dict, List
 
 def show_incidents_page(api_client: APIClient):
