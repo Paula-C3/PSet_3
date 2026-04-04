@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from backend.infrastructure.database import SessionLocal, Base, engine
 from backend.infrastructure.models import UserModel
 from backend.domain.enums import Role
-from backend.infrastructure.auth import get_password_hash
+from backend.infrastructure.auth import hash_password
 import uuid
 
 def init_database():
@@ -21,7 +21,7 @@ def init_database():
                 id=str(uuid.uuid4()),
                 name="Admin",
                 email="admin@test.com",
-                hashed_password=get_password_hash("password"),
+                hashed_password=hash_password("password"),
                 role=Role.ADMIN
             )
             db.add(admin_user)
