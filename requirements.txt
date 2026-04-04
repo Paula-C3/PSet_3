@@ -5,4 +5,5 @@ alembic
 pyjwt
 bcrypt
 psycopg2-binary
+python-jose[cryptography]
 pytest
