@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import sys
+import time
 
 sys.path.insert(0, os.path.dirname(__file__))
 
@@ -13,7 +14,20 @@ from backend.infrastructure.auth import hash_password
 import uuid
 
 def init_database():
-    Base.metadata.create_all(bind=engine)
+    max_retries = 30
+    retry_delay = 1
+    
+    for attempt in range(max_retries):
+        try:
+            Base.metadata.create_all(bind=engine)
+            break
+        except Exception as e:
+            if attempt < max_retries - 1:
+                print(f"Intento {attempt + 1}/{max_retries} fallido, reintentando en {retry_delay}s...")
+                time.sleep(retry_delay)
+            else:
+                print(f"Error al conectar a la BD después de {max_retries} intentos: {e}")
+                raise
     
     db = SessionLocal()
     
