@@ -1,6 +1,10 @@
+#!/usr/bin/env python
 import os
 import sys
+
 sys.path.insert(0, os.path.dirname(__file__))
+
+os.environ.setdefault("DATABASE_URL", "postgresql://opscenter:opscenter_pass@db:5432/opscenter_db")
 
 from backend.infrastructure.database import SessionLocal, Base, engine
 from backend.infrastructure.models import UserModel
@@ -29,9 +33,11 @@ def init_database():
             print("Usuario de prueba creado: admin@test.com / password")
         else:
             print("Usuario de prueba ya existe")
-    
+    except Exception as e:
+        print(f"Error al inicializar BD: {e}")
     finally:
         db.close()
 
 if __name__ == "__main__":
     init_database()
+
