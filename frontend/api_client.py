@@ -1,12 +1,15 @@
-import requests
 import json
+import os
+
+import requests
 from typing import Dict, Optional, List, Any
 
 class APIClient:
     """Cliente HTTP para interactuar con la API del backend"""
 
-    def __init__(self, base_url: str = "http://localhost:8000"):
-        self.base_url = base_url.rstrip('/')
+    def __init__(self, base_url: Optional[str] = None):
+        env_url = os.getenv("API_BASE_URL")
+        self.base_url = (base_url or env_url or "http://localhost:8000").rstrip('/')
         self._token: Optional[str] = None
 
     def set_token(self, token: str) -> None:
