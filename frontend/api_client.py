@@ -79,7 +79,7 @@ class APIClient:
         url = f"{self.base_url}/incidents"
 
         response = requests.get(url, headers=self._get_headers())
-        return self._handle_response(response)
+        return self._handle_response(response)      #type:ignore
 
     def get_incident(self, incident_id: str) -> Dict[str, Any]:
         """Obtiene detalle de un incidente"""
@@ -108,11 +108,8 @@ class APIClient:
         return self._handle_response(response)
 
     def change_incident_status(self, incident_id: str, new_status: str) -> Dict[str, Any]:
-        """Cambia estado de incidente"""
         url = f"{self.base_url}/incidents/{incident_id}/status"
-        data = {"new_status": new_status}
-
-        response = requests.patch(url, json=data, headers=self._get_headers())
+        response = requests.patch(url, params={"new_status": new_status}, headers=self._get_headers())
         return self._handle_response(response)
 
     def delete_incident(self, incident_id: str) -> Dict[str, Any]:
@@ -123,10 +120,8 @@ class APIClient:
         return self._handle_response(response)
 
     # Tareas
-    def get_tasks(self) -> List[Dict[str, Any]]:
-        """Obtiene lista de tareas"""
+    def get_tasks(self) -> Any:
         url = f"{self.base_url}/tasks"
-
         response = requests.get(url, headers=self._get_headers())
         return self._handle_response(response)
 
@@ -144,11 +139,8 @@ class APIClient:
         return self._handle_response(response)
 
     def change_task_status(self, task_id: str, new_status: str) -> Dict[str, Any]:
-        """Cambia estado de tarea"""
         url = f"{self.base_url}/tasks/{task_id}/status"
-        data = {"new_status": new_status}
-
-        response = requests.patch(url, json=data, headers=self._get_headers())
+        response = requests.patch(url, params={"new_status": new_status}, headers=self._get_headers())
         return self._handle_response(response)
 
     # Notificaciones
@@ -157,4 +149,4 @@ class APIClient:
         url = f"{self.base_url}/notifications"
 
         response = requests.get(url, headers=self._get_headers())
-        return self._handle_response(response)
+        return self._handle_response(response)      #type:ignore
