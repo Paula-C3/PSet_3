@@ -35,15 +35,15 @@ Diseñar e implementar una aplicación completa que incluya:
 Diseñar e implementar una aplicación completa que incluya:
 
 - El sistema sigue una **arquitectura hexagonal (Ports & Adapters)**:
-Frontend (Streamlit)
-↓
-API (FastAPI)
-↓
-Application Layer (Use Cases, DTOs)
-↓
-Domain Layer (Entidades, reglas, patrones)
-↓
-Infrastructure Layer (ORM, DB, Auth)
+  Frontend (Streamlit)
+  ↓
+  API (FastAPI)
+  ↓
+  Application Layer (Use Cases, DTOs)
+  ↓
+  Domain Layer (Entidades, reglas, patrones)
+  ↓
+  Infrastructure Layer (ORM, DB, Auth)
 ---
 
 ### Capas:
