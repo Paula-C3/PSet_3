@@ -32,8 +32,9 @@ Diseñar e implementar una aplicación completa que incluya:
 ---
 
 ##  Arquitectura
+Diseñar e implementar una aplicación completa que incluya:
 
-El sistema sigue una **arquitectura hexagonal (Ports & Adapters)**:
+- El sistema sigue una **arquitectura hexagonal (Ports & Adapters)**:
 Frontend (Streamlit)
 ↓
 API (FastAPI)
