@@ -124,6 +124,17 @@ def show_incident_detail(api_client: APIClient, incident_id: str):
                         st.error(f"Error al cambiar estado: {str(e)}")
             else:
                 st.info("Este incidente está cerrado.")
+                
+            st.divider()
+            st.write("**Asignar incidente**")
+            assignee_id = st.text_input("User ID del asignado", key="assignee_id")
+            if st.button("Asignar"):
+                try:
+                    api_client.assign_incident(incident_id, assignee_id)
+                    st.success("Incidente asignado")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Error al asignar: {str(e)}")
 
     except Exception as e:
         st.error(f"Error al cargar incidente: {str(e)}")
