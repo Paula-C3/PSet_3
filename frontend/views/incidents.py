@@ -89,9 +89,9 @@ def show_incident_detail(api_client: APIClient, incident_id: str):
         st.write(f"**Descripción:** {incident['description']}")
         st.write(f"**Severidad:** {incident['severity']}")
         st.write(f"**Estado:** {incident['status']}")
-        st.write(f"**ID del incidente:** {incident.get('id', 'N/A')}")
-        st.write(f"**Creado por:** {incident.get('created_by', 'N/A')}")
-        st.write(f"**Asignado a:** {incident.get('assigned_to', 'No asignado')}")
+        st.write(f"**ID del incidente:** `{incident.get('id', 'N/A')}`")
+        st.write(f"**Creado por:** `{incident.get('created_by', 'N/A')}`")
+        st.write(f"**Asignado a:** `{incident.get('assigned_to', 'No asignado')}`")
 
         col1, col2 = st.columns(2)
 
@@ -102,18 +102,28 @@ def show_incident_detail(api_client: APIClient, incident_id: str):
                 st.rerun()
 
         with col2:
-            new_status = st.selectbox(
-                "Cambiar estado",
-                ["OPEN", "ASSIGNED", "IN_PROGRESS", "RESOLVED", "CLOSED"],
-                key="change_status"
-            )
-            if st.button("Actualizar Estado"):
-                try:
-                    result = api_client.change_incident_status(incident_id, new_status)
-                    st.success("Estado actualizado")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Error al cambiar estado: {str(e)}")
+            current_status = incident['status']
+            valid_transitions = {
+                "OPEN":        "ASSIGNED",
+                "ASSIGNED":    "IN_PROGRESS",
+                "IN_PROGRESS": "RESOLVED",
+                "RESOLVED":    "CLOSED",
+                "CLOSED":      None
+            }
+
+            next_status = valid_transitions.get(current_status)
+
+            if next_status:
+                st.write(f"**Siguiente estado:** `{next_status}`")
+                if st.button(f"Avanzar a {next_status}"):
+                    try:
+                        api_client.change_incident_status(incident_id, next_status)
+                        st.success(f"Estado actualizado a {next_status}")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error al cambiar estado: {str(e)}")
+            else:
+                st.info("Este incidente está cerrado.")
 
     except Exception as e:
         st.error(f"Error al cargar incidente: {str(e)}")
