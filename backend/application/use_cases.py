@@ -134,24 +134,22 @@ class IncidentUseCases:
         if not incident:
             raise ValueError("Incidente no encontrado")
 
-        transitions = {
-            "ASSIGNED":    incident.assign,
-            "IN_PROGRESS": incident.start_progress,
-            "RESOLVED":    incident.resolve,
-            "CLOSED":      incident.close,
-        }
+        status_upper = new_status.upper()
 
-        action = transitions.get(new_status.upper())
-        if not action:
+        if status_upper == "ASSIGNED":
+            # usa el creador como assignee por defecto si no tiene uno asignado
+            assignee = incident.assigned_to or incident.created_by
+            incident.assign(assignee)
+        elif status_upper == "IN_PROGRESS":
+            incident.start_progress()
+        elif status_upper == "RESOLVED":
+            incident.resolve()
+        elif status_upper == "CLOSED":
+            incident.close()
+        else:
             raise ValueError(f"Estado inválido: {new_status}")
 
-        # assign requiere assignee_id, los demás no
-        if new_status.upper() == "ASSIGNED":
-            raise ValueError("Para asignar usa el endpoint /assign")
-        
-        action()
         updated = self.incident_repo.save(incident)
-
         self.event_bus.publish(
             EventType.INCIDENT_STATUS_CHANGED,
             {"id": updated.id, "status": str(updated.status)}
