@@ -42,11 +42,25 @@ def init_database():
                 hashed_password=hash_password("password"),
                 role=Role.ADMIN
             )
-            db.add(admin_user)
+            supervisor_user = UserModel(
+                id=str(uuid.uuid4()),
+                name="Supervisor",
+                email="supervisor@test.com",
+                hashed_password=hash_password("password"),
+                role=Role.SUPERVISOR
+            )
+            operator_user = UserModel(
+                id=str(uuid.uuid4()),
+                name="Operator",
+                email="operator@test.com",
+                hashed_password=hash_password("password"),
+                role=Role.OPERATOR
+            )
+            db.add_all([admin_user, supervisor_user, operator_user])
             db.commit()
-            print("Usuario de prueba creado: admin@test.com / password")
+            print("Usuarios creados: admin@test.com, supervisor@test.com, operator@test.com / password")
         else:
-            print("Usuario de prueba ya existe")
+            print("Usuario de prueba ya existe: admin@test.com, supervisor@test.com, operator@test.com / password")
     except Exception as e:
         print(f"Error al inicializar BD: {e}")
     finally:
