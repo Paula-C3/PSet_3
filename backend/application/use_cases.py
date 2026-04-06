@@ -2,11 +2,11 @@ from typing import List, Optional
 from fastapi import Depends           #type:ignore
 
 from backend.domain.entities import User, Incident, Task
-# Aquí quitamos EventBus porque no es un repositorio
+
 from backend.domain.repositories import UserRepository, IncidentRepository, TaskRepository
 from backend.domain.factory import IncidentFactory
 from backend.domain.enums import EventType, Role
-# Aquí traemos el EventBus de donde realmente vive
+
 from backend.domain.observer import EventBus
 from backend.infrastructure.auth import verify_password, create_access_token
 from backend.application.dtos import UserCreateDTO, TokenDTO, IncidentCreateDTO, TaskCreateDTO
