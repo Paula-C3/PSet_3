@@ -89,6 +89,7 @@ def show_incident_detail(api_client: APIClient, incident_id: str):
         st.write(f"**Descripción:** {incident['description']}")
         st.write(f"**Severidad:** {incident['severity']}")
         st.write(f"**Estado:** {incident['status']}")
+        st.write(f"**ID del incidente:** {incident.get('id', 'N/A')}")
         st.write(f"**Creado por:** {incident.get('created_by', 'N/A')}")
         st.write(f"**Asignado a:** {incident.get('assigned_to', 'No asignado')}")
 
