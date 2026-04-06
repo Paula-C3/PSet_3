@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from backend.domain.entities import User
+from fastapi import APIRouter, Depends, HTTPException, status       #type:ignore
 from typing import List
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session       #type:ignore
 
 # Infraestructura
 from backend.infrastructure.database import get_db
@@ -83,11 +84,11 @@ def login(user_data: UserCreateDTO, service: AuthUseCases = Depends(get_auth_ser
 
 
 @router.get("/me", response_model=UserDTO)
-def get_current_user_info(current_user: dict = Depends(get_current_user),
+def get_current_user_info(current_user: User = Depends(get_current_user),
                           service: AuthUseCases = Depends(get_auth_service)):
     from backend.domain.enums import Role
-    user_id = current_user["user_id"]
-    role_str = current_user["role"]
+    user_id = current_user.id
+    role_str = current_user.role
     # Para obtener el usuario real, necesitamos un método que devuelva UserDTO
     # Por ahora retornamos una respuesta mínima
     return UserDTO(
@@ -103,42 +104,42 @@ def get_current_user_info(current_user: dict = Depends(get_current_user),
 @router.post("/incidents", response_model=IncidentDTO, status_code=status.HTTP_201_CREATED)
 def create_incident(
     incident_data: IncidentCreateDTO,
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     service: IncidentUseCases = Depends(get_incident_service)
 ):
-    return service.create_incident(incident_data, current_user["user_id"])
+    return service.create_incident(incident_data, current_user.id)
 
 
 @router.get("/incidents", response_model=List[IncidentDTO])
-def list_incidents(current_user: dict = Depends(get_current_user),
+def list_incidents(current_user: User = Depends(get_current_user),
                    service: IncidentUseCases = Depends(get_incident_service)):
     return service.get_all_incidents(current_user)
 
 
 @router.get("/incidents/{incident_id}", response_model=IncidentDTO)
 def get_incident_detail(incident_id: str,
-                        current_user: dict = Depends(get_current_user),
+                        current_user: User = Depends(get_current_user),
                         service: IncidentUseCases = Depends(get_incident_service)):
     return service.get_incident_detail(incident_id)
 
 
 @router.patch("/incidents/{incident_id}/assign/{user_id}", response_model=IncidentDTO)
 def assign_incident(incident_id: str, user_id: str,
-                    current_user: dict = Depends(require_supervisor),
+                    current_user: User = Depends(require_supervisor),
                     service: IncidentUseCases = Depends(get_incident_service)):
     return service.assign_incident(incident_id, user_id)
 
 
 @router.patch("/incidents/{incident_id}/status", response_model=IncidentDTO)
 def change_incident_status(incident_id: str, new_status: str,
-                           current_user: dict = Depends(require_supervisor),
+                           current_user: User = Depends(require_supervisor),
                            service: IncidentUseCases = Depends(get_incident_service)):
     return service.change_status(incident_id, new_status)
 
 
 @router.delete("/incidents/{incident_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_incident(incident_id: str,
-                    current_user: dict = Depends(require_admin),
+                    current_user: User = Depends(require_admin),
                     service: IncidentUseCases = Depends(get_incident_service)):
     service.delete_incident(incident_id)
     return None
@@ -148,20 +149,20 @@ def delete_incident(incident_id: str,
 
 @router.post("/tasks", status_code=status.HTTP_201_CREATED)
 def create_task(task_data: TaskCreateDTO,
-                current_user: dict = Depends(get_current_user),
+                current_user: User = Depends(get_current_user),
                 service: TaskUseCases = Depends(get_task_service)):
     return service.create_task(task_data)
 
 
 @router.get("/tasks")
-def get_tasks(current_user: dict = Depends(get_current_user),
+def get_tasks(current_user: User = Depends(get_current_user),
               service: TaskUseCases = Depends(get_task_service)):
     return service.get_tasks(current_user)
 
 
 @router.patch("/tasks/{task_id}/status")
 def change_task_status(task_id: str, new_status: str,
-                       current_user: dict = Depends(get_current_user),
+                       current_user: User = Depends(get_current_user),
                        service: TaskUseCases = Depends(get_task_service)):
     return service.change_status(task_id, new_status)
 
@@ -169,6 +170,6 @@ def change_task_status(task_id: str, new_status: str,
 # RUTAS DE NOTIFICACIONES
 
 @router.get("/notifications")
-def get_notifications(current_user: dict = Depends(get_current_user),
+def get_notifications(current_user: User = Depends(get_current_user),
                       service: NotificationUseCases = Depends(get_notification_service)):
     return service.get_notifications(current_user)
