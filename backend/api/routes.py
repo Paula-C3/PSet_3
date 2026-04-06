@@ -1,7 +1,7 @@
 from backend.domain.entities import User
-from fastapi import APIRouter, Depends, HTTPException, status       #type:ignore
+from fastapi import APIRouter, Depends, HTTPException, status  # type:ignore
 from typing import List
-from sqlalchemy.orm import Session       #type:ignore
+from sqlalchemy.orm import Session  # type:ignore
 
 # Infraestructura
 from backend.infrastructure.database import get_db
@@ -13,7 +13,7 @@ from backend.infrastructure.repositories import (
 )
 
 # Dominio
-from backend.domain.observer import EventBus
+from backend.domain.observer import EventBus, NotificationObserver, LogObserver
 
 # DTOs
 from backend.application.dtos import (
@@ -49,16 +49,29 @@ def get_auth_service(db: Session = Depends(get_db)):
     repo = SQLAlchemyUserRepository(db)
     return AuthUseCases(repo)
 
+
 def get_incident_service(db: Session = Depends(get_db)):
     incident_repo = SQLAlchemyIncidentRepository(db)
     user_repo = SQLAlchemyUserRepository(db)
+    notification_repo = SQLAlchemyNotificationRepository(db)
+
     event_bus = EventBus()
+    event_bus.subscribe(NotificationObserver(notification_repo))
+    event_bus.subscribe(LogObserver())
+
     return IncidentUseCases(incident_repo, user_repo, event_bus)
+
 
 def get_task_service(db: Session = Depends(get_db)):
     task_repo = SQLAlchemyTaskRepository(db)
+    notification_repo = SQLAlchemyNotificationRepository(db)
+
     event_bus = EventBus()
+    event_bus.subscribe(NotificationObserver(notification_repo))
+    event_bus.subscribe(LogObserver())
+
     return TaskUseCases(task_repo, event_bus)
+
 
 def get_notification_service(db: Session = Depends(get_db)):
     repo = SQLAlchemyNotificationRepository(db)
@@ -80,17 +93,22 @@ def login(user_data: UserCreateDTO, service: AuthUseCases = Depends(get_auth_ser
     try:
         return service.login(user_data)
     except Exception:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciales incorrectas")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Credenciales incorrectas"
+        )
 
 
 @router.get("/me", response_model=UserDTO)
-def get_current_user_info(current_user: User = Depends(get_current_user),
-                          service: AuthUseCases = Depends(get_auth_service)):
+def get_current_user_info(
+    current_user: User = Depends(get_current_user),
+    service: AuthUseCases = Depends(get_auth_service)
+):
     from backend.domain.enums import Role
+
     user_id = current_user.id
     role_str = current_user.role
-    # Para obtener el usuario real, necesitamos un método que devuelva UserDTO
-    # Por ahora retornamos una respuesta mínima
+
     return UserDTO(
         id=user_id,
         username="",
@@ -111,36 +129,48 @@ def create_incident(
 
 
 @router.get("/incidents", response_model=List[IncidentDTO])
-def list_incidents(current_user: User = Depends(get_current_user),
-                   service: IncidentUseCases = Depends(get_incident_service)):
+def list_incidents(
+    current_user: User = Depends(get_current_user),
+    service: IncidentUseCases = Depends(get_incident_service)
+):
     return service.get_all_incidents(current_user)
 
 
 @router.get("/incidents/{incident_id}", response_model=IncidentDTO)
-def get_incident_detail(incident_id: str,
-                        current_user: User = Depends(get_current_user),
-                        service: IncidentUseCases = Depends(get_incident_service)):
+def get_incident_detail(
+    incident_id: str,
+    current_user: User = Depends(get_current_user),
+    service: IncidentUseCases = Depends(get_incident_service)
+):
     return service.get_incident_detail(incident_id)
 
 
 @router.patch("/incidents/{incident_id}/assign/{user_id}", response_model=IncidentDTO)
-def assign_incident(incident_id: str, user_id: str,
-                    current_user: User = Depends(require_supervisor),
-                    service: IncidentUseCases = Depends(get_incident_service)):
+def assign_incident(
+    incident_id: str,
+    user_id: str,
+    current_user: User = Depends(require_supervisor),
+    service: IncidentUseCases = Depends(get_incident_service)
+):
     return service.assign_incident(incident_id, user_id)
 
 
 @router.patch("/incidents/{incident_id}/status", response_model=IncidentDTO)
-def change_incident_status(incident_id: str, new_status: str,
-                           current_user: User = Depends(require_supervisor),
-                           service: IncidentUseCases = Depends(get_incident_service)):
+def change_incident_status(
+    incident_id: str,
+    new_status: str,
+    current_user: User = Depends(require_supervisor),
+    service: IncidentUseCases = Depends(get_incident_service)
+):
     return service.change_status(incident_id, new_status)
 
 
 @router.delete("/incidents/{incident_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_incident(incident_id: str,
-                    current_user: User = Depends(require_admin),
-                    service: IncidentUseCases = Depends(get_incident_service)):
+def delete_incident(
+    incident_id: str,
+    current_user: User = Depends(require_admin),
+    service: IncidentUseCases = Depends(get_incident_service)
+):
     service.delete_incident(incident_id)
     return None
 
@@ -148,28 +178,37 @@ def delete_incident(incident_id: str,
 # RUTAS DE TAREAS
 
 @router.post("/tasks", status_code=status.HTTP_201_CREATED)
-def create_task(task_data: TaskCreateDTO,
-                current_user: User = Depends(get_current_user),
-                service: TaskUseCases = Depends(get_task_service)):
+def create_task(
+    task_data: TaskCreateDTO,
+    current_user: User = Depends(get_current_user),
+    service: TaskUseCases = Depends(get_task_service)
+):
     return service.create_task(task_data)
 
 
 @router.get("/tasks")
-def get_tasks(current_user: User = Depends(get_current_user),
-              service: TaskUseCases = Depends(get_task_service)):
+def get_tasks(
+    current_user: User = Depends(get_current_user),
+    service: TaskUseCases = Depends(get_task_service)
+):
     return service.get_tasks(current_user)
 
 
 @router.patch("/tasks/{task_id}/status")
-def change_task_status(task_id: str, new_status: str,
-                       current_user: User = Depends(get_current_user),
-                       service: TaskUseCases = Depends(get_task_service)):
+def change_task_status(
+    task_id: str,
+    new_status: str,
+    current_user: User = Depends(get_current_user),
+    service: TaskUseCases = Depends(get_task_service)
+):
     return service.change_status(task_id, new_status)
 
 
 # RUTAS DE NOTIFICACIONES
 
 @router.get("/notifications")
-def get_notifications(current_user: User = Depends(get_current_user),
-                      service: NotificationUseCases = Depends(get_notification_service)):
+def get_notifications(
+    current_user: User = Depends(get_current_user),
+    service: NotificationUseCases = Depends(get_notification_service)
+):
     return service.get_notifications(current_user)

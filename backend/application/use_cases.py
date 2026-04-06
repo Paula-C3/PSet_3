@@ -1,5 +1,5 @@
 from typing import List, Optional
-from fastapi import Depends           #type:ignore
+from fastapi import Depends  # type:ignore
 
 from backend.domain.entities import User, Incident, Task
 
@@ -11,13 +11,12 @@ from backend.domain.observer import EventBus
 from backend.infrastructure.auth import verify_password, create_access_token
 from backend.application.dtos import UserCreateDTO, TokenDTO, IncidentCreateDTO, TaskCreateDTO
 
-# Importamos las implementaciones reales para la inyección por defecto
 from backend.infrastructure.repositories import (
-    SQLAlchemyUserRepository, 
-    SQLAlchemyIncidentRepository, 
+    SQLAlchemyUserRepository,
+    SQLAlchemyIncidentRepository,
     SQLAlchemyTaskRepository
 )
-from backend.domain.observer import EventBus as DomainEventBus
+
 
 class AuthUseCases:
     def __init__(self, user_repo: UserRepository = Depends(SQLAlchemyUserRepository)):
@@ -44,7 +43,6 @@ class AuthUseCases:
     def login(self, data: UserCreateDTO) -> TokenDTO:
         from backend.infrastructure.auth import verify_password, create_access_token
 
-        # usamos username como email
         email = data.email if data.email else data.username
 
         user = self.user_repo.find_by_email(email)
@@ -62,12 +60,13 @@ class AuthUseCases:
 
         return TokenDTO(access_token=token)
 
+
 class IncidentUseCases:
     def __init__(
-        self, 
-        incident_repo: IncidentRepository = Depends(SQLAlchemyIncidentRepository), 
+        self,
+        incident_repo: IncidentRepository = Depends(SQLAlchemyIncidentRepository),
         user_repo: UserRepository = Depends(SQLAlchemyUserRepository),
-        event_bus: EventBus = Depends() # FastAPI buscara la instancia de EventBus
+        event_bus: EventBus = Depends()
     ):
         self.incident_repo = incident_repo
         self.user_repo = user_repo
@@ -81,10 +80,15 @@ class IncidentUseCases:
             created_by=creator_id
         )
         saved_incident = self.incident_repo.save(incident)
-        
+
         self.event_bus.publish(
-            EventType.INCIDENT_CREATED, 
-            {"id": saved_incident.id, "title": saved_incident.title}
+            EventType.INCIDENT_CREATED,
+            {
+                "id": saved_incident.id,
+                "title": saved_incident.title,
+                "created_by": saved_incident.created_by,
+                "assigned_to": saved_incident.assigned_to
+            }
         )
         return saved_incident
 
@@ -97,18 +101,21 @@ class IncidentUseCases:
         incident = self.incident_repo.find_by_id(incident_id)
         if not incident:
             raise ValueError("Incidente no encontrado")
-        
+
         incident.assign(assignee_id)
         updated = self.incident_repo.save(incident)
-        
+
         self.event_bus.publish(
-            EventType.INCIDENT_ASSIGNED, 
-            {"id": updated.id, "assigned_to": assignee_id}
+            EventType.INCIDENT_ASSIGNED,
+            {
+                "id": updated.id,
+                "assigned_to": assignee_id,
+                "created_by": updated.created_by
+            }
         )
         return updated
 
     def delete_incident(self, incident_id: str):
-        # Método de borrado no implementado en repositorio
         raise NotImplementedError("delete no está implementado en IncidentRepository")
 
     def get_incident_detail(self, incident_id: str) -> Incident:
@@ -116,7 +123,7 @@ class IncidentUseCases:
         if not incident:
             raise ValueError("Incidente no encontrado")
         return incident
-    
+
     def resolve_incident(self, incident_id: str) -> Incident:
         incident = self.incident_repo.find_by_id(incident_id)
         if not incident:
@@ -125,10 +132,15 @@ class IncidentUseCases:
         updated = self.incident_repo.save(incident)
         self.event_bus.publish(
             EventType.INCIDENT_STATUS_CHANGED,
-            {"id": updated.id, "status": str(updated.status)}
+            {
+                "id": updated.id,
+                "status": str(updated.status),
+                "created_by": updated.created_by,
+                "assigned_to": updated.assigned_to
+            }
         )
         return updated
-    
+
     def change_status(self, incident_id: str, new_status: str) -> Incident:
         incident = self.incident_repo.find_by_id(incident_id)
         if not incident:
@@ -137,7 +149,6 @@ class IncidentUseCases:
         status_upper = new_status.upper()
 
         if status_upper == "ASSIGNED":
-            # usa el creador como assignee por defecto si no tiene uno asignado
             assignee = incident.assigned_to or incident.created_by
             incident.assign(assignee)
         elif status_upper == "IN_PROGRESS":
@@ -152,10 +163,16 @@ class IncidentUseCases:
         updated = self.incident_repo.save(incident)
         self.event_bus.publish(
             EventType.INCIDENT_STATUS_CHANGED,
-            {"id": updated.id, "status": str(updated.status)}
+            {
+                "id": updated.id,
+                "status": str(updated.status),
+                "created_by": updated.created_by,
+                "assigned_to": updated.assigned_to
+            }
         )
         return updated
-    
+
+
 class TaskUseCases:
 
     def __init__(
@@ -176,15 +193,19 @@ class TaskUseCases:
         saved = self.task_repo.save(task)
         self.event_bus.publish(
             EventType.TASK_CREATED,
-            {"id": saved.id, "incident_id": saved.incident_id}
+            {
+                "id": saved.id,
+                "incident_id": saved.incident_id,
+                "assigned_to": saved.assigned_to
+            }
         )
         return saved
-    
+
     def get_tasks(self, user: User) -> List[Task]:
         if user.role == Role.ADMIN or user.role == Role.SUPERVISOR:
             return self.task_repo.find_all()
         return self.task_repo.find_by_assignee(user.id)
-    
+
     def change_status(self, task_id: str, new_status) -> Task:
         task = self.task_repo.find_by_id(task_id)
         if not task:
@@ -193,10 +214,14 @@ class TaskUseCases:
         updated = self.task_repo.save(task)
         self.event_bus.publish(
             EventType.TASK_DONE,
-            {"id": updated.id}
+            {
+                "id": updated.id,
+                "assigned_to": updated.assigned_to
+            }
         )
         return updated
-    
+
+
 class NotificationUseCases:
 
     def __init__(self, notification_repo):
