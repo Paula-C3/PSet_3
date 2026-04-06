@@ -44,7 +44,7 @@ def test_user_repository_save_and_find():
     user = User(
         name="Juan",
         email="juan@test.com",
-        hashed_password="hashed123",
+        password="hashed123",
         role=Role.ADMIN,
     )
 
@@ -65,7 +65,7 @@ def test_user_repository_find_by_email():
     user = User(
         name="Ana",
         email="ana@test.com",
-        hashed_password="hashed456",
+        password="hashed456",
         role=Role.OPERATOR,
     )
     repo.save(user)
@@ -87,7 +87,7 @@ def test_incident_repository_save_and_find_by_creator():
     user = User(
         name="Carlos",
         email="carlos@test.com",
-        hashed_password="hashed789",
+        password="hashed789",
         role=Role.OPERATOR,
     )
     saved_user = user_repo.save(user)
@@ -120,7 +120,7 @@ def test_incident_repository_find_by_status():
     user = User(
         name="Maria",
         email="maria@test.com",
-        hashed_password="hash999",
+        password="hash999",
         role=Role.SUPERVISOR,
     )
     saved_user = user_repo.save(user)
@@ -152,7 +152,7 @@ def test_task_repository_save_and_find_by_incident():
     user = User(
         name="Pedro",
         email="pedro@test.com",
-        hashed_password="hash111",
+        password="hash111",
         role=Role.OPERATOR,
     )
     saved_user = user_repo.save(user)
@@ -194,7 +194,7 @@ def test_notification_repository_save_and_find_by_recipient():
     user = User(
         name="Luisa",
         email="luisa@test.com",
-        hashed_password="hash222",
+        password="hash222",
         role=Role.OPERATOR,
     )
     saved_user = user_repo.save(user)

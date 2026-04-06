@@ -3,8 +3,8 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-import bcrypt
-import jwt
+import bcrypt           #type:ignore
+import jwt              #type:ignore
 
 SECRET_KEY = "super-secret-key-change-this"
 ALGORITHM = "HS256"
