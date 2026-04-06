@@ -12,7 +12,7 @@ Actualmente, la gestión de incidentes, tareas y notificaciones se realiza media
 - Baja visibilidad del estado de incidentes
 - Notificaciones inconsistentes
 
-**OpsCenter** resuelve estos problemas centralizando la gestión en una única plataforma. :contentReference[oaicite:0]{index=0}
+**OpsCenter** resuelve estos problemas centralizando la gestión en una única plataforma. 
 
 ---
 
@@ -27,7 +27,7 @@ Diseñar e implementar una aplicación completa que incluya:
 - Autenticación y autorización
 - Patrones de diseño
 - Docker y despliegue
-- Trabajo colaborativo en GitHub :contentReference[oaicite:1]{index=1}
+- Trabajo colaborativo en GitHub 
 
 ---
 
