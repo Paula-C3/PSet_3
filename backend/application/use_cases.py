@@ -1,5 +1,5 @@
 from typing import List, Optional
-from fastapi import Depends
+from fastapi import Depends           #type:ignore
 
 from backend.domain.entities import User, Incident, Task
 # Aquí quitamos EventBus porque no es un repositorio
@@ -26,17 +26,17 @@ class AuthUseCases:
     def register_user(self, data: UserCreateDTO) -> User:
         from backend.domain.entities import User
         from backend.domain.enums import Role
-        from backend.infrastructure.auth import get_password_hash
+        from backend.infrastructure.auth import hash_password
         import uuid
 
-        hashed_password = get_password_hash(data.password)
+        hashed_password = hash_password(data.password)
 
         user = User(
             id=str(uuid.uuid4()),
             name=data.username,
             email=data.email if data.email else data.username,
             password=hashed_password,
-            role=Role.USER
+            role=Role.OPERATOR
         )
 
         return self.user_repo.save(user)
@@ -55,10 +55,10 @@ class AuthUseCases:
         if not verify_password(data.password, user.password):
             raise ValueError("Credenciales inválidas")
 
-        token = create_access_token({
-            "sub": user.id,
-            "role": str(user.role)
-        })
+        token = create_access_token(
+            user_id=user.id,
+            role=str(user.role)
+        )
 
         return TokenDTO(access_token=token)
 
@@ -123,6 +123,35 @@ class IncidentUseCases:
             raise ValueError("Incidente no encontrado")
         incident.resolve()
         updated = self.incident_repo.save(incident)
+        self.event_bus.publish(
+            EventType.INCIDENT_STATUS_CHANGED,
+            {"id": updated.id, "status": str(updated.status)}
+        )
+        return updated
+    
+    def change_status(self, incident_id: str, new_status: str) -> Incident:
+        incident = self.incident_repo.find_by_id(incident_id)
+        if not incident:
+            raise ValueError("Incidente no encontrado")
+
+        transitions = {
+            "ASSIGNED":    incident.assign,
+            "IN_PROGRESS": incident.start_progress,
+            "RESOLVED":    incident.resolve,
+            "CLOSED":      incident.close,
+        }
+
+        action = transitions.get(new_status.upper())
+        if not action:
+            raise ValueError(f"Estado inválido: {new_status}")
+
+        # assign requiere assignee_id, los demás no
+        if new_status.upper() == "ASSIGNED":
+            raise ValueError("Para asignar usa el endpoint /assign")
+        
+        action()
+        updated = self.incident_repo.save(incident)
+
         self.event_bus.publish(
             EventType.INCIDENT_STATUS_CHANGED,
             {"id": updated.id, "status": str(updated.status)}
