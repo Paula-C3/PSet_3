@@ -37,8 +37,8 @@ def get_current_user(
         raise credentials_exception
 
 def require_role(allowed_roles: List[Role]):
-    def role_checker(current_user: Dict = Depends(get_current_user)):
-        if current_user.get("role") not in [r.value for r in allowed_roles]:
+    def role_checker(current_user: User = Depends(get_current_user)):
+        if current_user.role not in allowed_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="No tienes permisos para realizar esta operacion"
