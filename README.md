@@ -139,8 +139,15 @@ Se utiliza para generar diferentes tipos de notificaciones según el evento, per
 - Visualización por roles
 
 ---
+## Organización del equipo
 
+El proyecto se desarrolló en 5 roles:
 
+- Arquitectura de dominio
+- Patrones de diseño
+- Infraestructura
+- Aplicación y API
+- Frontend y DevOps
 ---
 
 ##  Cómo ejecutar el proyecto
@@ -154,17 +161,6 @@ Se utiliza para generar diferentes tipos de notificaciones según el evento, per
 
 ```bash
 docker compose up --build
-
----
-## Organización del equipo
-
-El proyecto se desarrolló en 5 roles:
-
-- Arquitectura de dominio
-- Patrones de diseño
-- Infraestructura
-- Aplicación y API
-- Frontend y DevOps
 
 
 
