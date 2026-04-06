@@ -3,6 +3,13 @@
 
 Plataforma interna de gestión de incidentes operativos para una fintech.
 
+# Integrantes
+- Vaishali Desai
+- Pamela Barbosa
+- Ayelén Jaramillo
+- Paula Caicedo
+- Giuliana Auqui
+
 ##  Problema
 
 Actualmente, la gestión de incidentes, tareas y notificaciones se realiza mediante herramientas dispersas como correos electrónicos, hojas de cálculo y mensajería informal. Esto genera:
