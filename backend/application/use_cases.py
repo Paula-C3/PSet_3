@@ -9,7 +9,7 @@ from backend.domain.enums import EventType, Role
 
 from backend.domain.observer import EventBus
 from backend.infrastructure.auth import verify_password, create_access_token
-from backend.application.dtos import UserCreateDTO, TokenDTO, IncidentCreateDTO, TaskCreateDTO
+from backend.application.dtos import UserCreateDTO, LoginDTO, TokenDTO, IncidentCreateDTO, TaskCreateDTO
 
 from backend.infrastructure.repositories import (
     SQLAlchemyUserRepository,
@@ -32,30 +32,28 @@ class AuthUseCases:
 
         user = User(
             id=str(uuid.uuid4()),
-            name=data.username,
-            email=data.email if data.email else data.username,
+            name=data.name or data.email,
+            email=data.email,
             password=hashed_password,
-            role=Role.OPERATOR
+            role=data.role or Role.OPERATOR
         )
 
         return self.user_repo.save(user)
 
-    def login(self, data: UserCreateDTO) -> TokenDTO:
+    def login(self, data: LoginDTO) -> TokenDTO:
         from backend.infrastructure.auth import verify_password, create_access_token
 
-        email = data.email if data.email else data.username
-
-        user = self.user_repo.find_by_email(email)
+        user = self.user_repo.find_by_email(data.email)
 
         if not user:
             raise ValueError("Usuario no encontrado")
 
         if not verify_password(data.password, user.password):
-            raise ValueError("Credenciales inválidas")
+            raise ValueError("Credenciales invalidas")
 
         token = create_access_token(
             user_id=user.id,
-            role=str(user.role)
+            role= user.role.value if hasattr(user.role, 'value') else str(user.role)
         )
 
         return TokenDTO(access_token=token)
@@ -116,7 +114,7 @@ class IncidentUseCases:
         return updated
 
     def delete_incident(self, incident_id: str):
-        raise NotImplementedError("delete no está implementado en IncidentRepository")
+        raise NotImplementedError("delete no esta implementado en IncidentRepository")
 
     def get_incident_detail(self, incident_id: str) -> Incident:
         incident = self.incident_repo.find_by_id(incident_id)
@@ -158,7 +156,7 @@ class IncidentUseCases:
         elif status_upper == "CLOSED":
             incident.close()
         else:
-            raise ValueError(f"Estado inválido: {new_status}")
+            raise ValueError(f"Estado invalido: {new_status}")
 
         updated = self.incident_repo.save(incident)
         self.event_bus.publish(

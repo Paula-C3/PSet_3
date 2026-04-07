@@ -3,30 +3,46 @@ from typing import Optional, List
 from datetime import datetime
 from backend.domain.enums import Role, Severity, IncidentStatus, TaskStatus, NotificationStatus, NotificationChannel
 
-# --- DTOs de Autenticacion ---
+
+# DTOs de Autenticacion 
+
 class UserCreateDTO(BaseModel):
-    username: str
+    """Usado para registro. name es opcional para compatibilidad."""
+    name: Optional[str] = None
+    email: EmailStr
     password: str
-    email: Optional[EmailStr] = None
+    role: Optional[Role] = Role.OPERATOR
+
+
+class LoginDTO(BaseModel):
+    """Usado exclusivamente para login."""
+    email: EmailStr
+    password: str
+
 
 class TokenDTO(BaseModel):
     access_token: str
     token_type: str = "bearer"
 
-# --- DTOs de Usuario ---
+
+# DTOs de Usuario 
+
 class UserDTO(BaseModel):
     id: str
-    username: str
+    name: Optional[str] = None
     email: Optional[str] = None
     role: Role
 
     model_config = ConfigDict(from_attributes=True)
 
-# --- DTOs de Incidentes ---
+
+# DTOs de Incidentes 
+
 class IncidentCreateDTO(BaseModel):
-    title: str = Field(..., min_length=5, max_length=100)
-    description: str = Field(..., min_length=10)
+    title: str = Field(..., min_length=1, max_length=100)
+    description: str = Field(..., min_length=1)
     severity: Severity
+
 
 class IncidentDTO(BaseModel):
     id: str
@@ -40,12 +56,15 @@ class IncidentDTO(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-# --- DTOs de Tareas ---
+
+# DTOs de Tareas 
+
 class TaskCreateDTO(BaseModel):
     incident_id: str
     title: str
     description: str
     assigned_to: str
+
 
 class TaskDTO(BaseModel):
     id: str
@@ -58,20 +77,23 @@ class TaskDTO(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-# --- DTOs de Notificaciones ---
+
+# DTOs de Notificaciones
+
 class NotificationDTO(BaseModel):
     id: str
     recipient: str
     channel: NotificationChannel
     message: str
+    event_type: Optional[str] = None
     status: NotificationStatus
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
-# --- ALIAS DE COMPATIBILIDAD ---
-# Estos permiten que los Use Cases viejos y las Rutas nuevas funcionen juntos
-LoginRequest = UserCreateDTO
+
+# ALIAS DE COMPATIBILIDAD 
+LoginRequest = LoginDTO
 TokenResponse = TokenDTO
 IncidentCreate = IncidentCreateDTO
 TaskCreate = TaskCreateDTO

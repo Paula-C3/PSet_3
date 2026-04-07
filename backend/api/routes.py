@@ -21,8 +21,11 @@ from backend.application.dtos import (
     IncidentCreateDTO,
     UserDTO,
     UserCreateDTO,
+    LoginDTO,
     TokenDTO,
-    TaskCreateDTO
+    TaskCreateDTO,
+    TaskDTO,
+    NotificationDTO,
 )
 
 # Casos de uso
@@ -43,7 +46,9 @@ from backend.api.dependencies import (
 router = APIRouter()
 
 
+
 # PROVEEDORES DE SERVICIOS
+
 
 def get_auth_service(db: Session = Depends(get_db)):
     repo = SQLAlchemyUserRepository(db)
@@ -78,7 +83,9 @@ def get_notification_service(db: Session = Depends(get_db)):
     return NotificationUseCases(repo)
 
 
-# RUTAS DE ACCESO
+
+# AUTH
+
 
 @router.post("/auth/register", response_model=UserDTO, status_code=status.HTTP_201_CREATED)
 def register(user_data: UserCreateDTO, service: AuthUseCases = Depends(get_auth_service)):
@@ -89,7 +96,8 @@ def register(user_data: UserCreateDTO, service: AuthUseCases = Depends(get_auth_
 
 
 @router.post("/auth/login", response_model=TokenDTO)
-def login(user_data: UserCreateDTO, service: AuthUseCases = Depends(get_auth_service)):
+def login(user_data: LoginDTO, service: AuthUseCases = Depends(get_auth_service)):
+    """Recibe email + password, devuelve access_token."""
     try:
         return service.login(user_data)
     except Exception:
@@ -100,24 +108,19 @@ def login(user_data: UserCreateDTO, service: AuthUseCases = Depends(get_auth_ser
 
 
 @router.get("/me", response_model=UserDTO)
-def get_current_user_info(
-    current_user: User = Depends(get_current_user),
-    service: AuthUseCases = Depends(get_auth_service)
-):
-    from backend.domain.enums import Role
-
-    user_id = current_user.id
-    role_str = current_user.role
-
+def get_current_user_info(current_user: User = Depends(get_current_user)):
+    """Devuelve id, email y role reales del usuario autenticado."""
     return UserDTO(
-        id=user_id,
-        username="",
-        email="",
-        role=Role[role_str]
+        id=current_user.id,
+        name=getattr(current_user, "name", None),
+        email=getattr(current_user, "email", None),
+        role=current_user.role,
     )
 
 
-# RUTAS DE INCIDENTES
+
+# INCIDENTES
+
 
 @router.post("/incidents", response_model=IncidentDTO, status_code=status.HTTP_201_CREATED)
 def create_incident(
@@ -142,7 +145,10 @@ def get_incident_detail(
     current_user: User = Depends(get_current_user),
     service: IncidentUseCases = Depends(get_incident_service)
 ):
-    return service.get_incident_detail(incident_id)
+    incident = service.get_incident_detail(incident_id)
+    if not incident:
+        raise HTTPException(status_code=404, detail="Incidente no encontrado")
+    return incident
 
 
 @router.patch("/incidents/{incident_id}/assign/{user_id}", response_model=IncidentDTO)
@@ -159,9 +165,10 @@ def assign_incident(
 def change_incident_status(
     incident_id: str,
     new_status: str,
-    current_user: User = Depends(require_supervisor),
+    current_user: User = Depends(get_current_user),
     service: IncidentUseCases = Depends(get_incident_service)
 ):
+    """Cualquier usuario autenticado puede avanzar el estado de un incidente."""
     return service.change_status(incident_id, new_status)
 
 
@@ -175,7 +182,9 @@ def delete_incident(
     return None
 
 
-# RUTAS DE TAREAS
+
+# TAREAS
+
 
 @router.post("/tasks", status_code=status.HTTP_201_CREATED)
 def create_task(
@@ -204,7 +213,9 @@ def change_task_status(
     return service.change_status(task_id, new_status)
 
 
-# RUTAS DE NOTIFICACIONES
+
+# NOTIFICACIONES
+
 
 @router.get("/notifications")
 def get_notifications(
