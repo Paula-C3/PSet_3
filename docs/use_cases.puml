@@ -1,0 +1,56 @@
+@startuml use_cases
+!define DIRECTION down
+
+skinparam classBackgroundColor #FEFCE9
+skinparam classBorderColor #D4AF37
+
+actor Admin
+actor Supervisor
+actor Operator
+
+rectangle OpsCenter {
+  usecase UC1 as "Autenticarse"
+  usecase UC2 as "Crear Incidente"
+  usecase UC3 as "Consultar Incidentes"
+  usecase UC4 as "Ver Detalle Incidente"
+  usecase UC5 as "Asignar Incidente"
+  usecase UC6 as "Cambiar Estado Incidente"
+  usecase UC7 as "Crear Tarea"
+  usecase UC8 as "Consultar Tareas"
+  usecase UC9 as "Cambiar Estado Tarea"
+  usecase UC10 as "Consultar Notificaciones"
+  usecase UC11 as "Recibir Notificación"
+}
+
+Admin --> UC1
+Admin --> UC3
+Admin --> UC4
+Admin --> UC5
+Admin --> UC6
+Admin --> UC8
+Admin --> UC10
+
+Supervisor --> UC1
+Supervisor --> UC3
+Supervisor --> UC4
+Supervisor --> UC5
+Supervisor --> UC6
+Supervisor --> UC7
+Supervisor --> UC8
+Supervisor --> UC10
+
+Operator --> UC1
+Operator --> UC2
+Operator --> UC3
+Operator --> UC4
+Operator --> UC7
+Operator --> UC8
+Operator --> UC9
+Operator --> UC10
+
+UC2 ..> UC11 : publica evento
+UC5 ..> UC11 : publica evento
+UC6 ..> UC11 : publica evento
+UC9 ..> UC11 : publica evento
+
+@enduml

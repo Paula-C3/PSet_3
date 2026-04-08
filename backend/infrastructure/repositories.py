@@ -25,7 +25,7 @@ def _to_domain_user(model: UserModel) -> User:
         id=model.id,
         name=model.name,
         email=model.email,
-        hashed_password=model.hashed_password,
+        password=model.hashed_password,
         role=model.role,
     )
 
@@ -79,14 +79,14 @@ class SQLAlchemyUserRepository(UserRepository):
                 id=user.id,
                 name=user.name,
                 email=user.email,
-                hashed_password=user.hashed_password,
+                hashed_password=user.password,
                 role=user.role,
             )
             self.db.add(model)
         else:
             model.name = user.name
             model.email = user.email
-            model.hashed_password = user.hashed_password
+            model.hashed_password = user.password
             model.role = user.role
 
         self.db.commit()
