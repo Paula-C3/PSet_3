@@ -1,0 +1,43 @@
+from __future__ import annotations
+
+from datetime import datetime, timedelta, timezone
+from typing import Any
+
+import bcrypt           #type:ignore
+import jwt              #type:ignore
+
+SECRET_KEY = "super-secret-key-change-this"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
+
+
+def hash_password(password: str) -> str:
+    password_bytes = password.encode("utf-8")
+    hashed = bcrypt.hashpw(password_bytes, bcrypt.gensalt())
+    return hashed.decode("utf-8")
+
+
+def verify_password(password: str, hashed_password: str) -> bool:
+    password_bytes = password.encode("utf-8")
+    hashed_bytes = hashed_password.encode("utf-8")
+    return bcrypt.checkpw(password_bytes, hashed_bytes)
+
+
+def create_access_token(
+    user_id: int | str,
+    role: str,
+    expires_minutes: int = ACCESS_TOKEN_EXPIRE_MINUTES,
+) -> str:
+    expire = datetime.now(timezone.utc) + timedelta(minutes=expires_minutes)
+
+    payload = {
+        "user_id": user_id,
+        "role": role,
+        "exp": expire,
+    }
+
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+
+def decode_access_token(token: str) -> dict[str, Any]:
+    return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
