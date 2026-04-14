@@ -1,0 +1,14 @@
+Verificar que los 3 usuarios existen en la BD:
+docker exec -it opscenter_db psql -U opscenter -d opscenter_db -c "SELECT name, email, role FROM users;"
+
+Verificar los incidentes creados en la BD:
+docker exec -it opscenter_db psql -U opscenter -d opscenter_db -c "SELECT id, title, status, created_by, assigned_to FROM incidents;"
+
+Verificar que el observer genero notificaciones:
+docker exec -it opscenter_db psql -U opscenter -d opscenter_db -c "SELECT recipient, event_type, status, message FROM notifications;"
+
+El LogObserver imprime en los logs del contenedor api cada vez que se publica un evento:
+docker logs opscenter_api | grep "\[EVENT\]"
+
+Verificar en la BD el estado de una tarea:
+docker exec -it opscenter_db psql -U opscenter -d opscenter_db -c "SELECT id, title, status FROM tasks;"
