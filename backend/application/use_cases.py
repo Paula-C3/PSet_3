@@ -17,11 +17,11 @@ from backend.infrastructure.repositories import (
     SQLAlchemyTaskRepository
 )
 
-
+#Gestiona el registro de usuarios, login, creación y gestión de incidentes y tareas, y notificaciones. Cada método implementa la lógica de negocio correspondiente, interactuando con los repositorios para acceder a los datos y publicando eventos en el bus cuando es necesario.
 class AuthUseCases:
     def __init__(self, user_repo: UserRepository = Depends(SQLAlchemyUserRepository)):
         self.user_repo = user_repo
-
+#crea un nuevo usuario, hashea su contraseña y lo guarda en la base de datos. Si no se especifica un nombre, se usa el email como nombre. Si no se especifica un rol, se asigna el rol de OPERATOR por defecto.
     def register_user(self, data: UserCreateDTO) -> User:
         from backend.domain.entities import User
         from backend.domain.enums import Role
@@ -39,7 +39,7 @@ class AuthUseCases:
         )
 
         return self.user_repo.save(user)
-
+#verifica las credenciales del usuario, y si son válidas, genera un token JWT con el ID y el rol del usuario. Si el usuario no existe o las credenciales son inválidas, lanza un error.
     def login(self, data: LoginDTO) -> TokenDTO:
         from backend.infrastructure.auth import verify_password, create_access_token
 
@@ -58,7 +58,7 @@ class AuthUseCases:
 
         return TokenDTO(access_token=token)
 
-
+#Gestiona la lógica relacionada con incidentes.
 class IncidentUseCases:
     def __init__(
         self,
@@ -69,7 +69,7 @@ class IncidentUseCases:
         self.incident_repo = incident_repo
         self.user_repo = user_repo
         self.event_bus = event_bus
-
+#Crea un incidente y publica un evento.
     def create_incident(self, data: IncidentCreateDTO, creator_id: str) -> Incident:
         incident = IncidentFactory.create(
             title=data.title,
@@ -89,7 +89,7 @@ class IncidentUseCases:
             }
         )
         return saved_incident
-
+#Devuelve la lista de incidentes que el usuario tiene permiso para ver. 
     def get_all_incidents(self, user: User) -> List[Incident]:
         if user.role == Role.ADMIN or user.role == Role.SUPERVISOR:
             return self.incident_repo.find_all()
@@ -103,7 +103,7 @@ class IncidentUseCases:
                 seen_ids.add(incident.id)
                 result.append(incident)
         return result
-
+#Asigna un incidente a un usuario y publica un evento
     def assign_incident(self, incident_id: str, assignee_id: str) -> Incident:
         incident = self.incident_repo.find_by_id(incident_id)
         if not incident:
@@ -125,12 +125,25 @@ class IncidentUseCases:
     def delete_incident(self, incident_id: str):
         raise NotImplementedError("delete no esta implementado en IncidentRepository")
 
+#def delete_incident(self, incident_id: str):
+ #   incident = self.incident_repo.find_by_id(incident_id)
+  #  if not incident:
+   #     raise ValueError("Incidente no encontrado")
+    #self.incident_repo.delete(incident_id)
+    #self.event_bus.publish(
+     #   EventType.INCIDENT_DELETED,
+      #  {
+       #     "id": incident_id,
+        #    "deleted_by": incident.created_by
+        #}
+    #)
+    #Busca un incidente por su ID.
     def get_incident_detail(self, incident_id: str) -> Incident:
         incident = self.incident_repo.find_by_id(incident_id)
         if not incident:
             raise ValueError("Incidente no encontrado")
         return incident
-
+#Marca un incidente como resuelto
     def resolve_incident(self, incident_id: str) -> Incident:
         incident = self.incident_repo.find_by_id(incident_id)
         if not incident:

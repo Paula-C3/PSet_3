@@ -217,7 +217,7 @@ def change_task_status(
 
 # NOTIFICACIONES
 
-# Listar notificaciones devuelve solo las notificaciones dirigidas al usuario autenticado. Usuarios con rol SUPERVISOR o ADMIN pueden ver todas las notificaciones.
+# Listar notificaciones devuelve solo las notificaciones del usuario autenticado. Usuarios con rol SUPERVISOR o ADMIN pueden ver todas sus notificaciones, pero no las de otros usuarios.
 @router.get("/notifications")
 def get_notifications(
     current_user: User = Depends(get_current_user),
