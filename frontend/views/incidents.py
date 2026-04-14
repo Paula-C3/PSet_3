@@ -103,32 +103,31 @@ def show_incident_detail(api_client: APIClient, incident_id: str):
 
         with col2:
             current_status = incident['status']
-            valid_transitions = {
-                "OPEN":        "ASSIGNED",
-                "ASSIGNED":    "IN_PROGRESS",
-                "IN_PROGRESS": "RESOLVED",
-                "RESOLVED":    "CLOSED",
-                "CLOSED":      None
-            }
 
-            next_status = valid_transitions.get(current_status)
+            ALL_STATUSES = ["OPEN", "ASSIGNED", "IN_PROGRESS", "RESOLVED", "CLOSED"]
 
-            if next_status:
-                st.write(f"**Siguiente estado:** `{next_status}`")
-                if st.button(f"Avanzar a {next_status}"):
-                    try:
-                        api_client.change_incident_status(incident_id, next_status)
-                        st.success(f"Estado actualizado a {next_status}")
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Error al cambiar estado: {str(e)}")
-            else:
-                st.info("Este incidente está cerrado.")
+            st.write(f"**Estado actual:** `{current_status}`")
+            
+            options = [s for s in ALL_STATUSES if s != current_status]
+
+            new_status = st.selectbox(
+                "Cambiar estado a:",
+                options,
+                key=f"status_select_{incident_id}"
+            )
+
+            if st.button("Actualizar estado", key=f"update_status_{incident_id}"):
+                try:
+                    api_client.change_incident_status(incident_id, new_status)
+                    st.success(f"Estado actualizado a {new_status}")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"No se pudo cambiar el estado: {str(e)}")
                 
             st.divider()
             st.write("**Asignar incidente**")
             assignee_id = st.text_input("User ID del asignado", key="assignee_id")
-            if st.button("Asignar"):
+            if st.button("Asignar", key=f"assign_{incident_id}"):
                 try:
                     api_client.assign_incident(incident_id, assignee_id)
                     st.success("Incidente asignado")
