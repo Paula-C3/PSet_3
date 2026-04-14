@@ -155,7 +155,7 @@ def get_incident_detail(
 def assign_incident(
     incident_id: str,
     user_id: str,
-    current_user: User = Depends(require_supervisor),
+    current_user: User = Depends(require_admin),
     service: IncidentUseCases = Depends(get_incident_service)
 ):
     return service.assign_incident(incident_id, user_id)
@@ -165,10 +165,10 @@ def assign_incident(
 def change_incident_status(
     incident_id: str,
     new_status: str,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_supervisor),
     service: IncidentUseCases = Depends(get_incident_service)
 ):
-    """Cualquier usuario autenticado puede avanzar el estado de un incidente."""
+    """Solo SUPERVISOR y ADMIN pueden cambiar el estado de un incidente."""
     return service.change_status(incident_id, new_status)
 
 
